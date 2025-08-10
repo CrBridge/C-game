@@ -12,7 +12,7 @@ typedef struct render_state_internal {
 	u32 ebo_quad;
 	u32 shader_default;
 	u32 texture_color;
-	mat4x4 projection;
+	mat4x4 view_projection;
 }Render_State_Internal;
 
 SDL_Window* render_init_window(i16 width, i16 height);

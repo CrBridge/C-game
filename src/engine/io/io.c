@@ -16,11 +16,7 @@ File io_file_read(const char* path) {
 
 	FILE* fp = fopen(path, "rb");
 
-	if (!fp) {
-		ERROR_RETURN(file, IO_READ_ERROR_GENERAL, path, errno);
-	}
-
-	if (ferror(fp)) {
+	if (!fp || ferror(fp)) {
 		ERROR_RETURN(file, IO_READ_ERROR_GENERAL, path, errno);
 	}
 

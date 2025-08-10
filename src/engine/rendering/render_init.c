@@ -8,11 +8,6 @@
 #include "render.h"
 #include "render_internal.h"
 
-//Todo! math file/constants file
-#ifndef M_PI
-#define M_PI 3.1415926535
-#endif
-
 SDL_Window* render_init_window(i16 width, i16 height) {
 	if (!SDL_Init(SDL_INIT_VIDEO)){
 		ERROR_EXIT("Failed to init SDL: %s\n", SDL_GetError());
@@ -45,6 +40,9 @@ SDL_Window* render_init_window(i16 width, i16 height) {
 	if (context == NULL) {
 		ERROR_EXIT("Failed to create OpenGL context: %s\n", SDL_GetError());
 	}
+
+	// set cursor relative to screen
+	SDL_SetWindowRelativeMouseMode(window, true);
 
 	// v-sync enable
 	SDL_GL_SetSwapInterval(1);
@@ -115,18 +113,18 @@ void render_init_quad(u32* vao, u32* vbo, u32* ebo) {
 
 void render_init_shaders(Render_State_Internal* state) {
 	state->shader_default = render_shader_create("./res/shaders/default.vert", "./res/shaders/default.frag");
-
+	
 	//Todo! seems that degree->rad could be degrees * (M_PI/180), this should be defined somewhere
 	//Todo! will need to alter this in some instances (e.g. window resize)
 	//Todo! Add a view matrix as well, thats a whole camera system, lots of work
-	mat4x4_perspective(state->projection, 90.0 * (M_PI/180.0), 480.0/270.0, 0.1, 100.0);
+	mat4x4_perspective(state->view_projection, degree_to_rad(45.0f), 480.0 / 270.0, 0.1, 100.0);
 
 	glUseProgram(state->shader_default);
 	glUniformMatrix4fv(
 		glGetUniformLocation(state->shader_default, "projection"),
 		1,
 		GL_FALSE,
-		&state->projection[0][0]
+		&state->view_projection[0][0]
 	);
 }
 

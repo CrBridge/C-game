@@ -1,4 +1,5 @@
 /out
+/build
 /external
 /.vs
 CMakePresets.json
