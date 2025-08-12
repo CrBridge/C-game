@@ -1,7 +1,7 @@
 #include <SDL3/SDL_timer.h>
 
 #include "engine/global.h"
-#include <stdio.h>
+#include "engine/input.h"
 
 int main(int argc, char** argv) {
 	render_init();
@@ -10,6 +10,8 @@ int main(int argc, char** argv) {
 	
 	f32 dt = 0.0f;
 	f32 last_frame = 0.0f;
+
+	init_keyboard_state();
 
 	while (!should_quit) {
 		u64 total_ms = SDL_GetTicks();
@@ -29,23 +31,23 @@ int main(int argc, char** argv) {
 			}
 		}
 
-		// nicer input example
-		const bool* keyboard = SDL_GetKeyboardState(NULL);
-		if (keyboard[SDL_SCANCODE_ESCAPE])
+		update_current_keyboard_state();
+
+		if (is_key_pressed(SDL_SCANCODE_ESCAPE))
 		{
 			should_quit = true;
 		}
 
-		if (keyboard[SDL_SCANCODE_W]) {
+		if (is_key_down(SDL_SCANCODE_W)) {
 			update_camera_position(FORWARD, dt);
 		}
-		if (keyboard[SDL_SCANCODE_A]) {
+		if (is_key_down(SDL_SCANCODE_A)) {
 			update_camera_position(LEFT, dt);
 		}
-		if (keyboard[SDL_SCANCODE_S]) {
+		if (is_key_down(SDL_SCANCODE_S)) {
 			update_camera_position(BACKWARD, dt);
 		}
-		if (keyboard[SDL_SCANCODE_D]) {
+		if (is_key_down(SDL_SCANCODE_D)) {
 			update_camera_position(RIGHT, dt);
 		}
 
@@ -65,6 +67,8 @@ int main(int argc, char** argv) {
 		);
 		
 		render_end();
+
+		update_previous_keyboard_state();
 	}
 
 	return 0;
