@@ -12,7 +12,7 @@
 #define IO_READ_ERROR_MEMORY "Not enough free memory to read file: %s\n"
 
 File io_file_read(const char* path) {
-	File file = {.is_valid = false};
+	File file = { .is_valid = false };
 
 	FILE* fp = fopen(path, "rb");
 
@@ -69,8 +69,4 @@ File io_file_read(const char* path) {
 	file.is_valid = true;
 
 	return file;
-}
-
-int io_file_write(void* buffer, size_t size, const char* path) {
-	//
 }

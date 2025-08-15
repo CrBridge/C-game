@@ -1,11 +1,6 @@
-#include <glad/glad.h>
-#include <stdio.h>
+#include "shader.h"
 
-#include "../util.h"
-#include "../io/io.h"
-#include "render_internal.h"
-
-u32 render_shader_create(const char* vert_path, const char* frag_path) {
+u32 shader_load(const char* vert_path, const char* frag_path) {
 	int success;
 	char log[512];
 
@@ -15,7 +10,7 @@ u32 render_shader_create(const char* vert_path, const char* frag_path) {
 	}
 
 	u32 shader_vertex = glCreateShader(GL_VERTEX_SHADER);
-	glShaderSource(shader_vertex, 1, (const char* const *)&file_vertex, NULL);
+	glShaderSource(shader_vertex, 1, (const char* const*)&file_vertex, NULL);
 	glCompileShader(shader_vertex);
 	glGetShaderiv(shader_vertex, GL_COMPILE_STATUS, &success);
 	if (!success) {
@@ -51,4 +46,37 @@ u32 render_shader_create(const char* vert_path, const char* frag_path) {
 	free(file_fragment.data);
 
 	return shader;
+}
+
+void shader_use(u32* id) {
+	glUseProgram(*id);
+}
+
+void shader_clean(u32* id) {
+	glDeleteProgram(*id);
+}
+
+// utils: setting uniforms
+
+void shader_set_int(u32* id, const char* name, i32 value) {
+	glUniform1i(glGetUniformLocation(*id, name), value);
+}
+
+void shader_set_float(u32* id, const char* name, f32 value) {
+	glUniform1f(glGetUniformLocation(*id, name), value);
+}
+
+void shader_set_vec2(u32* id, const char* name, vec2* value) {
+	glUniform2fv(glGetUniformLocation(*id, name), 1, value[0]);
+}
+
+void shader_set_vec3(u32* id, const char* name, vec3* value) {
+	glUniform3fv(glGetUniformLocation(*id, name), 1, value[0]);
+}
+void shader_set_vec4(u32* id, const char* name, vec4* value) {
+	glUniform4fv(glGetUniformLocation(*id, name), 1, value[0]);
+}
+
+void shader_set_mat4(u32* id, const char* name, mat4x4* value) {
+	glUniformMatrix4fv(glGetUniformLocation(*id, name), 1, GL_FALSE, value[0][0]);
 }

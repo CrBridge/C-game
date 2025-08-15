@@ -1,12 +1,12 @@
 #version 460 core
 
+in vec3 frag_normal;
 in vec2 frag_uv;
 
 out vec4 frag_color;
 
-uniform vec4 color;
 uniform sampler2D texture_id;
 
 void main() {
-	frag_color = texture(texture_id, frag_uv) * color;
+	frag_color = texture(texture_id, frag_uv);
 }
