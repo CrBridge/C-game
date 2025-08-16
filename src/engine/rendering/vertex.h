@@ -11,5 +11,6 @@ typedef struct vertex {
 
 // equals method? Do I need that? Might do when model loading
 // for vertex duplication prevention
+int vertices_are_equal(Vertex* a, Vertex* b);
 
 #endif

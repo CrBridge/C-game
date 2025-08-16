@@ -2,7 +2,7 @@
 
 static App appState = {0};
 
-int init_window(u16 width, u16 height, char* name) {
+i32 window_init_window(u16 width, u16 height, char* name) {
 	appState.width = width;
 	appState.height = height;
 	
@@ -56,6 +56,9 @@ int init_window(u16 width, u16 height, char* name) {
 		return 0;
 	}
 
+	// set mouse mode relative - hide cursor and bind to screen
+	SDL_SetWindowRelativeMouseMode(appState.pWindow, true);
+
 	// v-sync enable
 	SDL_GL_SetSwapInterval(1);
 
@@ -85,15 +88,22 @@ int init_window(u16 width, u16 height, char* name) {
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+	// enable depth testing
+	glEnable(GL_DEPTH_TEST);
+
 	return 1;
 }
 
-void clean_window(void) {
+void window_clean_window(void) {
 	SDL_GL_DestroyContext(appState.context);
 	SDL_DestroyWindow(appState.pWindow);
 	SDL_Quit();
 }
 
-void swap_buffer(void) {
+void window_swap_buffer(void) {
 	SDL_GL_SwapWindow(appState.pWindow);
+}
+
+f32 window_get_aspect(void) {
+	return (f32)appState.width / (f32)appState.height;
 }

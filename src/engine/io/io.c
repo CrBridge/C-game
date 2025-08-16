@@ -6,17 +6,17 @@
 #include "../util.h"
 #include "io.h"
 
-// 20Mb, arbitrary, could probably be larger
-#define IO_READ_CHUNK_SIZE 2097152
-#define IO_READ_ERROR_GENERAL "Error reading file: %s. errno: %d\n"
-#define IO_READ_ERROR_MEMORY "Not enough free memory to read file: %s\n"
-
 File io_file_read(const char* path) {
 	File file = { .is_valid = false };
 
 	FILE* fp = fopen(path, "rb");
 
-	if (!fp || ferror(fp)) {
+	if (!fp) {
+		ERROR_RETURN(file, IO_READ_ERROR_GENERAL, path, errno);
+	}
+
+	if (ferror(fp)) {
+		fclose(fp);
 		ERROR_RETURN(file, IO_READ_ERROR_GENERAL, path, errno);
 	}
 
@@ -32,12 +32,14 @@ File io_file_read(const char* path) {
 
 			if (size <= used) {
 				free(data);
+				fclose(fp);
 				ERROR_RETURN(file, "Input file too large: %s\n", path);
 			}
 
 			tmp = realloc(data, size);
 			if (!tmp) {
 				free(data);
+				fclose(fp);
 				ERROR_RETURN(file, IO_READ_ERROR_MEMORY, path);
 			}
 			data = tmp;
@@ -53,12 +55,14 @@ File io_file_read(const char* path) {
 
 	if (ferror(fp)) {
 		free(data);
+		fclose(fp);
 		ERROR_RETURN(file, IO_READ_ERROR_GENERAL, path, errno);
 	}
 
 	tmp = realloc(data, used + 1);
 	if (!tmp) {
 		free(data);
+		fclose(fp);
 		ERROR_RETURN(file, IO_READ_ERROR_MEMORY, path);
 	}
 	data = tmp;
@@ -67,6 +71,8 @@ File io_file_read(const char* path) {
 	file.data = data;
 	file.len = used;
 	file.is_valid = true;
+
+	fclose(fp);
 
 	return file;
 }

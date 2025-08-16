@@ -18,8 +18,9 @@ typedef struct app {
 	u16 height;
 } App;
 
-int init_window(u16 width, u16 height, char* name);
-void clean_window(void);
-void swap_buffer(void);
+i32 window_init_window(u16 width, u16 height, char* name);
+void window_clean_window(void);
+void window_swap_buffer(void);
+f32 window_get_aspect(void);
 
 #endif
