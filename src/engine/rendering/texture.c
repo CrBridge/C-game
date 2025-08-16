@@ -17,7 +17,12 @@ void texture_load_texture(u32* id, const char* texturePath) {
 	unsigned char* data = stbi_load(texturePath, &width, &height, &channels, 0);
 
 	if (!data) {
-		ERROR_EXIT("Error reading texture: %s\n", texturePath);
+		// Texture couldn't be read, fallback to this
+		fprintf(stderr, "Error reading texture: %s - defaulting\n", texturePath);
+		u8 color[16] = {0, 255, 0, 255 };
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, color);
+		texture_unbind();
+		return;
 	}
 
 	// TODO

@@ -16,12 +16,12 @@ void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
 	u32* uvIndices = 0;
 
 	FILE* fp = fopen(filePath, "r");
-	// TODO! the reallocs should probably use a temp pointer to avoid memory issues
-	// TODO! dont think I'm freeing everything I should
-	// TODO! and I need to close the file as well
+	// TODO! dont think I'm freeing everything I should, look into it
 	
 	if (!fp) {
-		// exit if the we couldn't load a file with the path, likely a typo
+		// TODO! exit if we couldn't load a file with the path, likely a typo,
+		// could instead have the method simply return 0 then leave it to the caller
+		// if they want it to cause a crash or make do without
 		ERROR_EXIT(IO_READ_ERROR_GENERAL, filePath, errno);
 	}
 
@@ -215,3 +215,65 @@ void mesh_clean(Mesh* mesh) {
 	vao_clean(&mesh->vao);
 	vbo_clean(&mesh->vbo);
 }
+
+// ===================== Mesh Helpers ==================== //
+void mesh_load_cube(Mesh* mesh) {
+	Vertex vertices[] = {
+		{{-0.5, -0.5,  0.5}, {0, 0, 1}, {0, 0}},
+		{{ 0.5, -0.5,  0.5}, {0, 0, 1}, {1, 0}},
+		{{ 0.5,  0.5,  0.5}, {0, 0, 1}, {1, 1}},
+		{{-0.5,  0.5,  0.5}, {0, 0, 1}, {0, 1}},
+
+		{{ 0.5, -0.5, -0.5}, {0, 0, -1}, {0, 0}},
+		{{-0.5, -0.5, -0.5}, {0, 0, -1}, {1, 0}},
+		{{-0.5,  0.5, -0.5}, {0, 0, -1}, {1, 1}},
+		{{ 0.5,  0.5, -0.5}, {0, 0, -1}, {0, 1}},
+
+		{{-0.5, -0.5, -0.5}, {-1, 0, 0}, {0, 0}},
+		{{-0.5, -0.5,  0.5}, {-1, 0, 0}, {1, 0}},
+		{{-0.5,  0.5,  0.5}, {-1, 0, 0}, {1, 1}},
+		{{-0.5,  0.5, -0.5}, {-1, 0, 0}, {0, 1}},
+
+		{{ 0.5, -0.5,  0.5}, {1, 0, 0}, {0, 0}},
+		{{ 0.5, -0.5, -0.5}, {1, 0, 0}, {1, 0}},
+		{{ 0.5,  0.5, -0.5}, {1, 0, 0}, {1, 1}},
+		{{ 0.5,  0.5,  0.5}, {1, 0, 0}, {0, 1}},
+
+		{{-0.5,  0.5,  0.5}, {0, 1, 0}, {0, 0}},
+		{{ 0.5,  0.5,  0.5}, {0, 1, 0}, {1, 0}},
+		{{ 0.5,  0.5, -0.5}, {0, 1, 0}, {1, 1}},
+		{{-0.5,  0.5, -0.5}, {0, 1, 0}, {0, 1}},
+
+		{{-0.5, -0.5, -0.5}, {0, -1, 0}, {0, 0}},
+		{{ 0.5, -0.5, -0.5}, {0, -1, 0}, {1, 0}},
+		{{ 0.5, -0.5,  0.5}, {0, -1, 0}, {1, 1}},
+		{{-0.5, -0.5,  0.5}, {0, -1, 0}, {0, 1}},
+	};
+
+	u32 indices[] = {
+		 0,  1,  2,  2,  3,  0,
+		 4,  5,  6,  6,  7,  4,
+		 8,  9, 10, 10, 11,  8,
+		12, 13, 14, 14, 15, 12,
+		16, 17, 18, 18, 19, 16,
+		20, 21, 22, 22, 23, 20
+	};
+
+	mesh_load_from_memory(mesh, vertices, sizeof(vertices) / sizeof(vertices[0]), indices, sizeof(indices) / sizeof(indices[0]));
+}
+void mesh_load_quad(Mesh* mesh) {
+	Vertex vertices[] = {
+		{{-0.5, -0.5,  0.0}, {0, 0, 1}, {0, 0}},
+		{{ 0.5, -0.5,  0.0}, {0, 0, 1}, {1, 0}},
+		{{ 0.5,  0.5,  0.0}, {0, 0, 1}, {1, 1}},
+		{{-0.5,  0.5,  0.0}, {0, 0, 1}, {0, 1}}
+	};
+
+	u32 indices[] = {
+		0, 1, 3,
+		1, 2, 3
+	};
+
+	mesh_load_from_memory(mesh, vertices, sizeof(vertices) / sizeof(vertices[0]), indices, sizeof(indices) / sizeof(indices[0]));
+}
+// ======================================================= //

@@ -27,4 +27,10 @@ void mesh_load_from_memory(Mesh* mesh, Vertex* vertices, u32 vertexCount, u32* i
 void mesh_draw(Mesh* mesh);
 void mesh_clean(Mesh* mesh);
 
+// some helpers for generating meshes without the need of a file or manually specifying vertices
+// may have an enum for these shapes so that any larger struct init function (e.g. an init_game_object)
+// can easily access them using it
+void mesh_load_cube(Mesh* mesh);
+void mesh_load_quad(Mesh* mesh);
+
 #endif

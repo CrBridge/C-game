@@ -7,6 +7,9 @@ int num_keys = 0;
 void input_init_keyboard_state(void) {
 	current_keyboard_state = SDL_GetKeyboardState(&num_keys);
 	previous_keyboard_state = malloc(num_keys * sizeof(bool));
+	if (!previous_keyboard_state) {
+		ERROR_EXIT("Error on allocating memory for the input state!\n");
+	}
 	memcpy(previous_keyboard_state, current_keyboard_state, num_keys * sizeof(bool));
 }
 
