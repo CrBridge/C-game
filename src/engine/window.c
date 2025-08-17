@@ -24,6 +24,10 @@ i32 window_init_window(u16 width, u16 height, char* name) {
 	// enable double buffering
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+	
+	//TODO! now that I use a frame buffer, I'm not sure specifying depth buffer
+	//	size is doing anything for me here, since I attach a depth-stencil buffer
+	//	to the rbo, the above could probably be removed
 
 	appState.pWindow = SDL_CreateWindow(
 		name,
@@ -87,9 +91,6 @@ i32 window_init_window(u16 width, u16 height, char* name) {
 	// enable alpha blending
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	// enable depth testing
-	glEnable(GL_DEPTH_TEST);
 
 	return 1;
 }

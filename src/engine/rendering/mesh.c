@@ -127,7 +127,9 @@ void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
 	u32* meshIndices = NULL;
 	u32 indexCount = 0;
 
-	// printf confirmed data is loaded correctly :)
+	//TODO! instead of recreating a large list of vertices to then initialise the buffers,
+	//	it might make more sense to use some calls to glBufferData and glBufferSubData to map
+	//	the values directly. I'd have to look into how I could retain vertex deduplication though
 	for (u32 i = 0; i < positionIndexCount; i++) {
 		Vertex v = {0};
 
@@ -261,6 +263,7 @@ void mesh_load_cube(Mesh* mesh) {
 
 	mesh_load_from_memory(mesh, vertices, sizeof(vertices) / sizeof(vertices[0]), indices, sizeof(indices) / sizeof(indices[0]));
 }
+
 void mesh_load_quad(Mesh* mesh) {
 	Vertex vertices[] = {
 		{{-0.5, -0.5,  0.0}, {0, 0, 1}, {0, 0}},
@@ -272,6 +275,74 @@ void mesh_load_quad(Mesh* mesh) {
 	u32 indices[] = {
 		0, 1, 3,
 		1, 2, 3
+	};
+
+	mesh_load_from_memory(mesh, vertices, sizeof(vertices) / sizeof(vertices[0]), indices, sizeof(indices) / sizeof(indices[0]));
+}
+
+void mesh_load_screen_quad(Mesh* mesh) {
+	//TODO! it's such a small mesh that the impact is almost certainly negligible,
+	//	but having normal and the positions z component is completely useless and would
+	//	be better off just have 2 vec2 and using a custom vertex declaration
+	Vertex vertices[] = {
+		{{-1.0, -1.0,  0.0}, {0, 0, 0}, {0, 0}},
+		{{ 1.0, -1.0,  0.0}, {0, 0, 0}, {1, 0}},
+		{{ 1.0,  1.0,  0.0}, {0, 0, 0}, {1, 1}},
+		{{-1.0,  1.0,  0.0}, {0, 0, 0}, {0, 1}}
+	};
+
+	u32 indices[] = {
+		0, 1, 3,
+		1, 2, 3
+	};
+
+	mesh_load_from_memory(mesh, vertices, sizeof(vertices) / sizeof(vertices[0]), indices, sizeof(indices) / sizeof(indices[0]));
+}
+
+void mesh_load_sky_cube(Mesh* mesh) {
+	//TODO! similar situation as screen_quad, except this one is alot more
+	//	wasteful, in fact I only need position values here since
+	//	the uv is calculated with the view matrix, should really rework this one
+	Vertex vertices[] = {
+		{{-1.0, -1.0,  1.0}, {0, 0, 1}, {0, 0}},
+		{{ 1.0, -1.0,  1.0}, {0, 0, 1}, {1, 0}},
+		{{ 1.0,  1.0,  1.0}, {0, 0, 1}, {1, 1}},
+		{{-1.0,  1.0,  1.0}, {0, 0, 1}, {0, 1}},
+
+		{{ 1.0, -1.0, -1.0}, {0, 0, -1}, {0, 0}},
+		{{-1.0, -1.0, -1.0}, {0, 0, -1}, {1, 0}},
+		{{-1.0,  1.0, -1.0}, {0, 0, -1}, {1, 1}},
+		{{ 1.0,  1.0, -1.0}, {0, 0, -1}, {0, 1}},
+
+		{{-1.0, -1.0, -1.0}, {-1, 0, 0}, {0, 0}},
+		{{-1.0, -1.0,  1.0}, {-1, 0, 0}, {1, 0}},
+		{{-1.0,  1.0,  1.0}, {-1, 0, 0}, {1, 1}},
+		{{-1.0,  1.0, -1.0}, {-1, 0, 0}, {0, 1}},
+
+		{{ 1.0, -1.0,  1.0}, {1, 0, 0}, {0, 0}},
+		{{ 1.0, -1.0, -1.0}, {1, 0, 0}, {1, 0}},
+		{{ 1.0,  1.0, -1.0}, {1, 0, 0}, {1, 1}},
+		{{ 1.0,  1.0,  1.0}, {1, 0, 0}, {0, 1}},
+
+		{{-1.0,  1.0,  1.0}, {0, 1, 0}, {0, 0}},
+		{{ 1.0,  1.0,  1.0}, {0, 1, 0}, {1, 0}},
+		{{ 1.0,  1.0, -1.0}, {0, 1, 0}, {1, 1}},
+		{{-1.0,  1.0, -1.0}, {0, 1, 0}, {0, 1}},
+
+		{{-1.0, -1.0, -1.0}, {0, -1, 0}, {0, 0}},
+		{{ 1.0, -1.0, -1.0}, {0, -1, 0}, {1, 0}},
+		{{ 1.0, -1.0,  1.0}, {0, -1, 0}, {1, 1}},
+		{{-1.0, -1.0,  1.0}, {0, -1, 0}, {0, 1}},
+	};
+
+	// reversed so faces are on the inside
+	u32 indices[] = {
+		 20, 23, 22, 22, 21, 20, 
+		 16, 19, 18, 18, 17, 16, 
+		 12, 15, 14, 14, 13, 12,  
+		  8, 11, 10, 10,  9,  8,  
+		  4,  7,  6,  6,  5,  4,  
+		  0,  3,  2,  2,  1,  0
 	};
 
 	mesh_load_from_memory(mesh, vertices, sizeof(vertices) / sizeof(vertices[0]), indices, sizeof(indices) / sizeof(indices[0]));

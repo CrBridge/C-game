@@ -1,10 +1,10 @@
 #include "texture.h"
 
-void texture_init(u32* id) {
+void texture_init(texture* id) {
 	glGenTextures(1, id);
 }
 
-void texture_load_texture(u32* id, const char* texturePath) {
+void texture_load_texture(texture* id, const char* texturePath) {
 	texture_bind(id);
 
 	// set sampler parameters, really should be configurable
@@ -39,8 +39,40 @@ void texture_load_texture(u32* id, const char* texturePath) {
 	stbi_image_free(data);
 }
 
-void texture_bind(u32* id) {
-	glActiveTexture(GL_TEXTURE0);
+void texture_load_cube_texture(texture* id, const char** texturePaths) {
+	texture_bind(id);
+
+	// set sampler parameters, really should be configurable
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+	int width, height, channels;
+	unsigned char* data;
+	//unsigned char* data = stbi_load(texturePath, &width, &height, &channels, 0);
+	// since we use a pointer, hard to get length, dont wanna pass in number right
+	// now so just hardcoding it
+	for (int i = 0; i < 6; i++) {
+		data = stbi_load(texturePaths[i], &width, &height, &channels, 0);
+		if (!data) {
+			ERROR_EXIT("Error reading cubemap face: %s\n", texturePaths[i]);
+		}
+		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 
+					GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		stbi_image_free(data);
+	}
+
+	texture_unbind();
+}
+
+void texture_bind(texture* id) {
+	//TODO! I previously had this below line hardcoded into this function
+	//	but if I ever want a way to have multiple textures binded
+	//  e.g. normal maps, I'd need a way to configure the texture slot
+	//	im making active. I can pass an int and just add it to the 0 arg
+	//glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D, *id);
 }
 
@@ -48,6 +80,10 @@ void texture_unbind(void) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void texture_clean(u32* id) {
+void texture_clean(texture* id) {
 	glDeleteTextures(1, id);
+}
+
+void texture_clean_cube(texture* id) {
+	glDeleteTextures(6, id);
 }

@@ -15,6 +15,9 @@
 
 #include "engine/components/transform_component.h"
 
+#include "engine/rendering/fbo.h"
+#include "engine/rendering/rbo.h"
+
 #include "engine/camera.h"
 
 static void poll_input(int* shouldQuit)
@@ -40,7 +43,7 @@ static void poll_input(int* shouldQuit)
 int main(int argc, char** argv)
 {
 	// Init SDL and OpenGL
-	if(!window_init_window(480, 272, "DAEMON")) {
+	if(!window_init_window(960, 544, "DAEMON")) {
 		return -1;
 	}
 
@@ -52,6 +55,7 @@ int main(int argc, char** argv)
 	f32 lastFrame = 0.0f;
 
 	// ===================== Matrix Init ===================== //
+
 	Transform transform;
 	component_transform_init(&transform);
 	transform.rotation[0] = 180.0f;
@@ -65,20 +69,64 @@ int main(int argc, char** argv)
 	Camera camera = {0};
 	camera_init(&camera);
 	camera.position[2] += 3.0f;
+
 	// ======================================================= //
 
 	// ============= Mesh, Shader & Texture Init ============= //
+
+	//donut
 	Mesh mesh = {0};
 	mesh_load_from_obj(&mesh, "./res/models/donut.obj");
+	texture donutTexture;
+	texture_init(&donutTexture);
+	texture_load_texture(&donutTexture, "./res/textures/donut_diffuse.png");
 	
-	u32 shader;
-	shader = shader_load("./res/shaders/default.vert", "./res/shaders/default.frag");
+	//cube for skybox
+	Mesh skyCube = { 0 };
+	mesh_load_sky_cube(&skyCube);
+	texture skyTexture;
+	texture_init(&skyTexture);
+	const char* skybox[6] = {
+		"./res/textures/skybox/right.png",
+		"./res/textures/skybox/left.png",
+		"./res/textures/skybox/top.png",
+		"./res/textures/skybox/bottom.png",
+		"./res/textures/skybox/front.png",
+		"./res/textures/skybox/back.png",
+	};
+	texture_load_cube_texture(&skyTexture, skybox);
 
-	u32 texture;
-	texture_init(&texture);
-	texture_load_texture(&texture, "./res/textures/donut_diffuse.png");
+	shader mainShader;
+	mainShader = shader_load("./res/shaders/default.vert", "./res/shaders/default.frag");
+
+	shader blitShader;
+	blitShader = shader_load("./res/shaders/blit.vert", "./res/shaders/blit.frag");
+
+	shader skyShader;
+	skyShader = shader_load("./res/shaders/sky.vert", "./res/shaders/sky.frag");
+
 	// ======================================================= //
 
+	// ================== Framebuffer Init =================== //
+	
+	fbo fbo;
+	fbo_init(&fbo);
+	fbo_bind(&fbo);
+	texture colorAttach;
+	fbo_add_buffer(&colorAttach, 480, 272);
+
+	rbo rbo;
+	rbo_init(&rbo);
+	rbo_attach_depth_stencil_buffers(&rbo, 480, 272);
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+		ERROR_EXIT("Error on initalising the Framebuffer\n");
+	}
+	fbo_unbind();
+
+	Mesh screenQuad = {0};
+	mesh_load_screen_quad(&screenQuad);
+
+	// ======================================================= //
 	while (!shouldQuit) {
 		// delta time calculations
 		u64 totalMs = SDL_GetTicks();
@@ -86,12 +134,10 @@ int main(int argc, char** argv)
 		dt = totalS - lastFrame;
 		lastFrame = totalS;
 
-		// input and event polling
+		// ================ Input & Event Polling ================ //
 		poll_input(&shouldQuit);
 		input_update_current_keyboard_state();
-		// input events - must occur before previous state is updated
-
-		// ================== Camera Controller ================== //
+		// input - must occur before previous state is updated
 		float x, y;
 		SDL_GetRelativeMouseState(&x, &y);
 		camera_move_camera_target(x, y, &camera);
@@ -111,27 +157,54 @@ int main(int argc, char** argv)
 		if (input_is_key_down(SDL_SCANCODE_D)) {
 			camera_move_camera_position(RIGHT, &camera, dt);
 		}
+		input_update_previous_keyboard_state();
 		// ======================================================= //
 
-		input_update_previous_keyboard_state();
-
-		shader_use(&shader); // just in case
+		//TODO! having to set the matrices for multiple shaders is annoying, I think
+		//	uniform buffer objects solve this?
+		shader_use(&mainShader); // just in case
 		mat4x4 model;
 		transform.rotation[1] += dt * 20.0f;
 		component_transform_calculate_model_matrix(model, &transform);
-		shader_set_mat4(&shader, "model", &model);
-
-		shader_set_mat4(&shader, "projection", &projection);
 		camera_get_view(view, &camera);
-		shader_set_mat4(&shader, "view", &view);
+
+		fbo_bind(&fbo);
+		glViewport(0, 0, 480, 272);
+
+		// enable depth testing when rendering the actual screen
+		glEnable(GL_DEPTH_TEST);
 
 		// rendering
 		glClearColor(0.08f, 0.1f, 0.1f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		shader_use(&shader);
-		texture_bind(&texture);
+		// disable depth writing for the skybox render
+		glDepthMask(GL_FALSE);
+		shader_use(&skyShader);
+		shader_set_mat4(&skyShader, "projection", &projection);
+		shader_set_mat4(&skyShader, "view", &view);
+		texture_bind(&skyTexture);
+		mesh_draw(&skyCube);
+
+		// re-enable for objects
+		glDepthMask(GL_TRUE);
+		shader_use(&mainShader);
+		shader_set_mat4(&mainShader, "model", &model);
+		shader_set_mat4(&mainShader, "projection", &projection);
+		shader_set_mat4(&mainShader, "view", &view);
+		texture_bind(&donutTexture);
 		mesh_draw(&mesh);
+
+		fbo_unbind();
+		rbo_unbind();
+
+		glViewport(0, 0, 960, 544);
+		// disable depth testing incase it tries clipping the screen quad
+		glDisable(GL_DEPTH_TEST);
+
+		shader_use(&blitShader);
+		texture_bind(&colorAttach);
+		mesh_draw(&screenQuad);
 
 		vao_unbind();
 
@@ -139,9 +212,20 @@ int main(int argc, char** argv)
 	}
 
 	// optional: cleaning up data
-	texture_clean(&texture);
-	shader_clean(&shader);
 	mesh_clean(&mesh);
+	mesh_clean(&skyCube);
+	mesh_clean(&screenQuad);
+
+	texture_clean(&donutTexture);
+	texture_clean(&colorAttach);
+	texture_clean_cube(&skyTexture);
+
+	shader_clean(&mainShader);
+	shader_clean(&blitShader);
+	shader_clean(&skyShader);
+
+	fbo_clean(&fbo);
+	rbo_clean(&rbo);
 
 	window_clean_window();
 

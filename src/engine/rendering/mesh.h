@@ -16,9 +16,9 @@
 #include <stdio.h>
 
 typedef struct mesh {
-	u32 vbo;
-	u32 vao;
-	u32 ebo;
+	vbo vbo;
+	vao vao;
+	ebo ebo;
 	u32 indexCount;
 } Mesh;
 
@@ -32,5 +32,7 @@ void mesh_clean(Mesh* mesh);
 // can easily access them using it
 void mesh_load_cube(Mesh* mesh);
 void mesh_load_quad(Mesh* mesh);
+void mesh_load_screen_quad(Mesh* mesh);
+void mesh_load_sky_cube(Mesh* mesh);
 
 #endif
