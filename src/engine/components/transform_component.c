@@ -2,7 +2,7 @@
 
 void component_transform_init(Transform* t) {
 	memcpy(t->position, (vec3) { 0, 0, 0 }, sizeof(vec3));
-	memcpy(t->position, (vec3) { 0, 0, 0 }, sizeof(vec3));
+	memcpy(t->rotation, (vec3) { 0, 0, 0 }, sizeof(vec3));
 	t->scale = 1.0f;
 }
 

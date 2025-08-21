@@ -10,7 +10,9 @@ typedef enum Movement_Direction {
 	FORWARD,
 	BACKWARD,
 	LEFT,
-	RIGHT
+	RIGHT,
+	UP,
+	DOWN
 }Movement_Direction;
 
 typedef struct camera {

@@ -18,6 +18,8 @@
 #include "engine/rendering/fbo.h"
 #include "engine/rendering/rbo.h"
 
+#include "engine/game_object.h"
+
 #include "engine/camera.h"
 
 static void poll_input(int* shouldQuit)
@@ -53,13 +55,9 @@ int main(int argc, char** argv)
 	int shouldQuit = 0;
 	f32 dt = 0.0f;
 	f32 lastFrame = 0.0f;
+	f32 totalTime = 0.0f;
 
 	// ===================== Matrix Init ===================== //
-
-	Transform transform;
-	component_transform_init(&transform);
-	transform.rotation[0] = 180.0f;
-	transform.rotation[2] = 45.0f;
 
 	mat4x4 projection;
 	mat4x4_identity(projection);
@@ -75,12 +73,23 @@ int main(int argc, char** argv)
 	// ============= Mesh, Shader & Texture Init ============= //
 
 	//donut
-	Mesh mesh = {0};
-	mesh_load_from_obj(&mesh, "./res/models/donut.obj");
-	texture donutTexture;
-	texture_init(&donutTexture);
-	texture_load_texture(&donutTexture, "./res/textures/donut_diffuse.png");
-	
+	GameObject donut;
+	game_object_init(&donut);
+	mesh_load_from_obj(&donut.mesh, "./res/models/donut.obj");
+	texture_load_texture(&donut.texId, "./res/textures/donut_diffuse.png");
+	donut.transform.rotation[0] = 180.0f;
+	donut.transform.rotation[2] = 45.0f;
+
+	//floor quad
+	GameObject floor;
+	game_object_init(&floor);
+	//mesh_load_quad(&floor.mesh);
+	mesh_load_from_obj(&floor.mesh, "./res/models/donut.obj");
+	texture_load_texture(&floor.texId, "./res/textures/box.png");
+	floor.transform.rotation[0] = 270.0f;
+	floor.transform.position[1] -= 1.0f;
+	floor.transform.scale = 10.0f;
+
 	//cube for skybox
 	Mesh skyCube = { 0 };
 	mesh_load_sky_cube(&skyCube);
@@ -113,6 +122,8 @@ int main(int argc, char** argv)
 	fbo_init(&fbo);
 	fbo_bind(&fbo);
 	texture colorAttach;
+	// TODO! dont hard code the width and height here, same with the rbo
+	//	and glViewport calls, these values should be stored somewhere
 	fbo_add_buffer(&colorAttach, 480, 272);
 
 	rbo rbo;
@@ -133,6 +144,7 @@ int main(int argc, char** argv)
 		f32 totalS = (f32)totalMs / SDL_MS_PER_SECOND;
 		dt = totalS - lastFrame;
 		lastFrame = totalS;
+		totalTime += totalS;
 
 		// ================ Input & Event Polling ================ //
 		poll_input(&shouldQuit);
@@ -142,9 +154,6 @@ int main(int argc, char** argv)
 		SDL_GetRelativeMouseState(&x, &y);
 		camera_move_camera_target(x, y, &camera);
 
-		if (input_is_key_released(SDL_SCANCODE_SPACE)) {
-			shouldQuit = true;
-		}
 		if (input_is_key_down(SDL_SCANCODE_W)) {
 			camera_move_camera_position(FORWARD, &camera, dt);
 		}
@@ -157,6 +166,12 @@ int main(int argc, char** argv)
 		if (input_is_key_down(SDL_SCANCODE_D)) {
 			camera_move_camera_position(RIGHT, &camera, dt);
 		}
+		if (input_is_key_down(SDL_SCANCODE_SPACE)) {
+			camera_move_camera_position(UP, &camera, dt);
+		}
+		if (input_is_key_down(SDL_SCANCODE_LSHIFT)) {
+			camera_move_camera_position(DOWN, &camera, dt);
+		}
 		input_update_previous_keyboard_state();
 		// ======================================================= //
 
@@ -164,8 +179,8 @@ int main(int argc, char** argv)
 		//	uniform buffer objects solve this?
 		shader_use(&mainShader); // just in case
 		mat4x4 model;
-		transform.rotation[1] += dt * 20.0f;
-		component_transform_calculate_model_matrix(model, &transform);
+		donut.transform.rotation[1] += dt * 20.0f;
+		component_transform_calculate_model_matrix(model, &donut.transform);
 		camera_get_view(view, &camera);
 
 		fbo_bind(&fbo);
@@ -192,8 +207,10 @@ int main(int argc, char** argv)
 		shader_set_mat4(&mainShader, "model", &model);
 		shader_set_mat4(&mainShader, "projection", &projection);
 		shader_set_mat4(&mainShader, "view", &view);
-		texture_bind(&donutTexture);
-		mesh_draw(&mesh);
+		game_object_draw(&donut);
+		component_transform_calculate_model_matrix(model, &floor.transform);
+		shader_set_mat4(&mainShader, "model", &model);
+		game_object_draw(&floor);
 
 		fbo_unbind();
 		rbo_unbind();
@@ -212,11 +229,11 @@ int main(int argc, char** argv)
 	}
 
 	// optional: cleaning up data
-	mesh_clean(&mesh);
+	game_object_clean(&donut);
+	game_object_clean(&floor);
 	mesh_clean(&skyCube);
 	mesh_clean(&screenQuad);
 
-	texture_clean(&donutTexture);
 	texture_clean(&colorAttach);
 	texture_clean_cube(&skyTexture);
 
