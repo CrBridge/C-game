@@ -56,6 +56,7 @@ int main(int argc, char** argv)
 	f32 dt = 0.0f;
 	f32 lastFrame = 0.0f;
 	f32 totalTime = 0.0f;
+	u32 currentFrame = 0;
 
 	// ===================== Matrix Init ===================== //
 
@@ -83,8 +84,7 @@ int main(int argc, char** argv)
 	//floor quad
 	GameObject floor;
 	game_object_init(&floor);
-	//mesh_load_quad(&floor.mesh);
-	mesh_load_from_obj(&floor.mesh, "./res/models/donut.obj");
+	mesh_load_quad(&floor.mesh);
 	texture_load_texture(&floor.texId, "./res/textures/box.png");
 	floor.transform.rotation[0] = 270.0f;
 	floor.transform.position[1] -= 1.0f;
@@ -145,6 +145,7 @@ int main(int argc, char** argv)
 		dt = totalS - lastFrame;
 		lastFrame = totalS;
 		totalTime += totalS;
+		currentFrame++;
 
 		// ================ Input & Event Polling ================ //
 		poll_input(&shouldQuit);
@@ -177,7 +178,6 @@ int main(int argc, char** argv)
 
 		//TODO! having to set the matrices for multiple shaders is annoying, I think
 		//	uniform buffer objects solve this?
-		shader_use(&mainShader); // just in case
 		mat4x4 model;
 		donut.transform.rotation[1] += dt * 20.0f;
 		component_transform_calculate_model_matrix(model, &donut.transform);
@@ -198,6 +198,7 @@ int main(int argc, char** argv)
 		shader_use(&skyShader);
 		shader_set_mat4(&skyShader, "projection", &projection);
 		shader_set_mat4(&skyShader, "view", &view);
+		shader_set_float(&skyShader, "time", totalS);
 		texture_bind(&skyTexture);
 		mesh_draw(&skyCube);
 
@@ -220,6 +221,7 @@ int main(int argc, char** argv)
 		glDisable(GL_DEPTH_TEST);
 
 		shader_use(&blitShader);
+		shader_set_int(&blitShader, "frame", currentFrame);
 		texture_bind(&colorAttach);
 		mesh_draw(&screenQuad);
 

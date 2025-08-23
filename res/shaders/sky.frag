@@ -6,7 +6,7 @@ out vec4 frag_color;
 
 uniform samplerCube skybox;
 
-//uniform float iTime;
+uniform float time;
 
 float hash13(vec3 p3)
 {
@@ -18,7 +18,5 @@ float hash13(vec3 p3)
 void main()
 {
     frag_color = texture(skybox, frag_uv);
-	// cool hashed b&w look
-	//float hashed = hash13(textureColor.xyz);
-	//frag_color = vec4(hashed, hashed, hashed, 1.0);
+	//frag_color = vec4(vec3(hash13(vec3(texture(skybox, frag_uv)))), 1.0);
 }  

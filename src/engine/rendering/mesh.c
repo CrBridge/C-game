@@ -37,6 +37,10 @@ void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
 		if (strcmp(lineHeader, "v") == 0) {
 			vec3 position;
 			(void)fscanf(fp, "%f %f %f\n", &position[0], &position[1], &position[2]);
+			// TODO: unbelievably stupid. realloc each time it grows? It should
+			//	grow exponentially e.g. double each time. would need to track
+			//	capacity as well as count then though I think. I really need
+			//	to just bite the bullet and write my own data structures
 			positionCount++;
 			//outPositions = realloc(outPositions, positionCount * sizeof(vec3));
 			tmp = realloc(outPositions, positionCount * sizeof(vec3));
@@ -189,6 +193,26 @@ void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
 
 	free(meshVertices);
 	free(meshIndices);
+}
+
+// TODO! WIP
+void mesh_load_from_heightmap(Mesh* mesh) {
+	Vertex* meshVertices = NULL;
+	u32 vertexCount = 0;
+	u32* meshIndices = NULL;
+	u32 indexCount = 0;
+
+	fnl_state noise = fnlCreateState();
+	noise.noise_type = FNL_NOISE_OPENSIMPLEX2;
+
+	for (int x = 0; x < 128; x++) {
+		for (int y = 0; y < 128; y++) {
+			// get noise value for a vertex
+			float heightVal = fnlGetNoise2D(&noise, x, y);
+		}
+	}
+
+	mesh_load_from_memory(mesh, meshVertices, vertexCount, meshIndices, indexCount);
 }
 
 void mesh_load_from_memory(Mesh* mesh, Vertex* vertices, u32 vertexCount, u32* indices, u32 indexCount) {

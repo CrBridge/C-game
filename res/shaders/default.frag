@@ -19,4 +19,5 @@ void main() {
 	vec3 lit_result = (ambient_light + fs_in.frag_light_intensity) * texture_col.xyz;
 
 	frag_color = vec4(lit_result, texture_col.a);
+	//frag_color = vec4(lit_result.xxx, texture_col.a);
 }
