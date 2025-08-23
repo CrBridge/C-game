@@ -15,6 +15,9 @@
 #include <glad/glad.h>
 #include <stdio.h>
 
+//
+#include <FastNoiseLite.h>
+
 typedef struct mesh {
 	vbo vbo;
 	vao vao;

@@ -12,7 +12,6 @@ uniform mat4 projection;
 void main()
 {
     frag_uv = a_pos;
-	// remove final part of projection by casting to mat3?
 	mat4 view_no_translation = mat4(mat3(view));
     gl_Position = projection * view_no_translation * vec4(a_pos, 1.0);
 }  

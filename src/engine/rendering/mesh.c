@@ -16,7 +16,6 @@ void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
 	u32* uvIndices = 0;
 
 	FILE* fp = fopen(filePath, "r");
-	// TODO! dont think I'm freeing everything I should, look into it
 	
 	if (!fp) {
 		// TODO! exit if we couldn't load a file with the path, likely a typo,
@@ -38,6 +37,10 @@ void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
 		if (strcmp(lineHeader, "v") == 0) {
 			vec3 position;
 			(void)fscanf(fp, "%f %f %f\n", &position[0], &position[1], &position[2]);
+			// TODO: unbelievably stupid. realloc each time it grows? It should
+			//	grow exponentially e.g. double each time. would need to track
+			//	capacity as well as count then though I think. I really need
+			//	to just bite the bullet and write my own data structures
 			positionCount++;
 			//outPositions = realloc(outPositions, positionCount * sizeof(vec3));
 			tmp = realloc(outPositions, positionCount * sizeof(vec3));
@@ -46,7 +49,7 @@ void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
 				ERROR_EXIT("Error reallocating memory for mesh initialisation: %s\n", filePath);
 			}
 			outPositions = tmp;
-			memcpy(outPositions[positionCount - 1], &position, sizeof(vec3));
+			memcpy(&outPositions[positionCount - 1], &position, sizeof(vec3));
 		}
 		else if (strcmp(lineHeader, "vt") == 0) {
 			vec2 uv;
@@ -58,7 +61,7 @@ void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
 				ERROR_EXIT("Error reallocating memory for mesh initialisation: %s\n", filePath);
 			}
 			outUvs = tmp;
-			memcpy(outUvs[uvCount - 1], &uv, sizeof(vec2));
+			memcpy(&outUvs[uvCount - 1], &uv, sizeof(vec2));
 		}
 		else if (strcmp(lineHeader, "vn") == 0) {
 			vec3 normal;
@@ -70,7 +73,7 @@ void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
 				ERROR_EXIT("Error reallocation memory for mesh initialisation: %s\n", filePath);
 			}
 			outNormals = tmp;
-			memcpy(outNormals[normalCount - 1], &normal, sizeof(vec3));
+			memcpy(&outNormals[normalCount - 1], &normal, sizeof(vec3));
 		}
 		else if (strcmp(lineHeader, "f") == 0) {
 			u32 positionIndex[3], uvIndex[3], normalIndex[3];
@@ -89,7 +92,7 @@ void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
 			positionIndexCount += 3;
 			tmp = realloc(positionIndices, positionIndexCount * sizeof(u32));
 			if (!tmp) {
-				free(fp);
+				fclose(fp);
 				ERROR_EXIT("Error reallocating memory for mesh initialisation: %s\n", filePath);
 			}
 			positionIndices = tmp;
@@ -99,7 +102,7 @@ void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
 			uvIndexCount += 3;
 			tmp = realloc(uvIndices, uvIndexCount * sizeof(u32));
 			if (!tmp) {
-				free(fp);
+				fclose(fp);
 				ERROR_EXIT("Error reallocating memory for mesh initialisation: %s\n", filePath);
 			}
 			uvIndices = tmp;
@@ -109,7 +112,7 @@ void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
 			normalIndexCount += 3;
 			tmp = realloc(normalIndices, normalIndexCount * sizeof(u32));
 			if (!tmp) {
-				free(fp);
+				fclose(fp);
 				ERROR_EXIT("Error reallocating memory for mesh initialisation: %s\n", filePath);
 			}
 			normalIndices = tmp;
@@ -137,9 +140,9 @@ void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
 		u32 normalIndex = normalIndices[i] - 1;
 		u32 uvIndex = uvIndices[i] - 1;
 
-		memcpy(v.position, outPositions[positionIndex], sizeof(vec3));
-		memcpy(v.normal, outNormals[normalIndex], sizeof(vec3));
-		memcpy(v.uv, outUvs[uvIndex], sizeof(vec2));
+		memcpy(v.position, &outPositions[positionIndex], sizeof(vec3));
+		memcpy(v.normal, &outNormals[normalIndex], sizeof(vec3));
+		memcpy(v.uv, &outUvs[uvIndex], sizeof(vec2));
 
 		i32 existingIndex = -1;
 		// TODO! really bad performance, looping the entire thing just to check if a vertex is
@@ -176,6 +179,36 @@ void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
 			}
 			meshIndices = tmp;
 			meshIndices[indexCount - 1] = vertexCount - 1;
+		}
+	}
+
+	mesh_load_from_memory(mesh, meshVertices, vertexCount, meshIndices, indexCount);
+
+	free(outPositions);
+	free(outNormals);
+	free(outUvs);
+	free(positionIndices);
+	free(normalIndices);
+	free(uvIndices);
+
+	free(meshVertices);
+	free(meshIndices);
+}
+
+// TODO! WIP
+void mesh_load_from_heightmap(Mesh* mesh) {
+	Vertex* meshVertices = NULL;
+	u32 vertexCount = 0;
+	u32* meshIndices = NULL;
+	u32 indexCount = 0;
+
+	fnl_state noise = fnlCreateState();
+	noise.noise_type = FNL_NOISE_OPENSIMPLEX2;
+
+	for (int x = 0; x < 128; x++) {
+		for (int y = 0; y < 128; y++) {
+			// get noise value for a vertex
+			float heightVal = fnlGetNoise2D(&noise, x, y);
 		}
 	}
 

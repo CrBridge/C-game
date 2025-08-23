@@ -6,11 +6,21 @@ out vec4 frag_color;
 
 uniform sampler2D texture_id;
 
+uniform int frame;
+
+float hash12(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+}
+
 void main()
 { 
-	//TODO! the screen quad might not even need uv, I might
-	//	be able to use the builtin gl_FragCoord to calculate output
-	//	but i'd have to benchmark, the quad is such a small amount
-	//	of memory and doing this calculation would probably be detrimental
-    frag_color = texture(texture_id, frag_uv);
+	frag_color = texture(texture_id, frag_uv);
+
+	// messing about with a film grain effect 
+    //vec4 color = texture(texture_id, frag_uv);
+	//float grain = hash12(frag_uv + float(frame));
+	//grain = (grain * 2 - 1) * 0.2;
+	//frag_color = color + color * grain;
 }

@@ -80,6 +80,20 @@ void camera_move_camera_position(Movement_Direction direction, Camera* c, f32 dt
 		vec3_scale(v_right, flat_right, v);
 		vec3_add(c->position, c->position, v_right);
 	}
+	else if (direction == UP) {
+		vec3 base_up = { 0.0f, 1.0f, 0.0f };
+
+		vec3 v_up;
+		vec3_scale(v_up, base_up, v);
+		vec3_add(c->position, c->position, v_up);
+	}
+	else if (direction == DOWN) {
+		vec3 base_up = { 0.0f, 1.0f, 0.0f };
+
+		vec3 v_up;
+		vec3_scale(v_up, base_up, v);
+		vec3_sub(c->position, c->position, v_up);
+	}
 }
 
 void camera_move_camera_target(f32 dx, f32 dy, Camera* c) {
