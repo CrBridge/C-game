@@ -1,33 +1,26 @@
 #include "mesh.h"
 
 void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
-	u32 positionCount = 0;
-	vec3* outPositions = 0;
-	u32 normalCount = 0;
-	vec3* outNormals = 0;
-	u32 uvCount = 0;
-	vec2* outUvs = 0;
+	//TODO! still not great, but the bottleneck at this point is
+	//	the vertex deduplication, and just the fact that I am reading text with fscanf
+	//	the fscanf could probably be sped up, but If I spend more time on this it should
+	//	be on improving the deduplication loop
 
-	u32 positionIndexCount = 0;
-	u32* positionIndices = 0;
-	u32 normalIndexCount = 0;
-	u32* normalIndices = 0;
-	u32 uvIndexCount = 0;
-	u32* uvIndices = 0;
+	Array positions = array_init(sizeof(vec3));
+	Array normals = array_init(sizeof(vec3));
+	Array uvs = array_init(sizeof(vec2));
+
+	Array positionIndices = array_init(sizeof(u32));
+	Array normalIndices = array_init(sizeof(u32));
+	Array uvIndices = array_init(sizeof(u32));
 
 	FILE* fp = fopen(filePath, "r");
-	
+
 	if (!fp) {
-		// TODO! exit if we couldn't load a file with the path, likely a typo,
-		// could instead have the method simply return 0 then leave it to the caller
-		// if they want it to cause a crash or make do without
 		ERROR_EXIT(IO_READ_ERROR_GENERAL, filePath, errno);
 	}
 
-	void* tmp;
-
 	while (1) {
-		// assume the first word of a line is <= 128 for now
 		char lineHeader[128] = {0};
 		int res = fscanf(fp, "%s", lineHeader);
 		if (res == EOF) {
@@ -37,49 +30,23 @@ void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
 		if (strcmp(lineHeader, "v") == 0) {
 			vec3 position;
 			(void)fscanf(fp, "%f %f %f\n", &position[0], &position[1], &position[2]);
-			// TODO: unbelievably stupid. realloc each time it grows? It should
-			//	grow exponentially e.g. double each time. would need to track
-			//	capacity as well as count then though I think. I really need
-			//	to just bite the bullet and write my own data structures
-			positionCount++;
-			//outPositions = realloc(outPositions, positionCount * sizeof(vec3));
-			tmp = realloc(outPositions, positionCount * sizeof(vec3));
-			if (!tmp) {
-				fclose(fp);
-				ERROR_EXIT("Error reallocating memory for mesh initialisation: %s\n", filePath);
-			}
-			outPositions = tmp;
-			memcpy(&outPositions[positionCount - 1], &position, sizeof(vec3));
+			array_append(&positions, &position);
 		}
 		else if (strcmp(lineHeader, "vt") == 0) {
 			vec2 uv;
 			(void)fscanf(fp, "%f %f\n", &uv[0], &uv[1]);
-			uvCount++;
-			tmp = realloc(outUvs, uvCount * sizeof(vec2));
-			if (!tmp) {
-				fclose(fp);
-				ERROR_EXIT("Error reallocating memory for mesh initialisation: %s\n", filePath);
-			}
-			outUvs = tmp;
-			memcpy(&outUvs[uvCount - 1], &uv, sizeof(vec2));
+			array_append(&uvs, &uv);
 		}
 		else if (strcmp(lineHeader, "vn") == 0) {
 			vec3 normal;
 			(void)fscanf(fp, "%f %f %f\n", &normal[0], &normal[1], &normal[2]);
-			normalCount++;
-			tmp = realloc(outNormals, normalCount * sizeof(vec3));
-			if (!tmp) {
-				fclose(fp);
-				ERROR_EXIT("Error reallocation memory for mesh initialisation: %s\n", filePath);
-			}
-			outNormals = tmp;
-			memcpy(&outNormals[normalCount - 1], &normal, sizeof(vec3));
+			array_append(&normals, &normal);
 		}
 		else if (strcmp(lineHeader, "f") == 0) {
 			u32 positionIndex[3], uvIndex[3], normalIndex[3];
 			int matches = fscanf(
-				fp, 
-				"%d/%d/%d %d/%d/%d %d/%d/%d\n", 
+				fp,
+				"%d/%d/%d %d/%d/%d %d/%d/%d\n",
 				&positionIndex[0], &uvIndex[0], &normalIndex[0],
 				&positionIndex[1], &uvIndex[1], &normalIndex[1],
 				&positionIndex[2], &uvIndex[2], &normalIndex[2]
@@ -87,112 +54,71 @@ void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
 			if (matches != 9) {
 				ERROR_EXIT("Error reading face information for mesh initialisation: %s\n", filePath);
 			}
-			// TODO!
-			// this is stupid, surely I could get away with a single indexCount right?
-			positionIndexCount += 3;
-			tmp = realloc(positionIndices, positionIndexCount * sizeof(u32));
-			if (!tmp) {
-				fclose(fp);
-				ERROR_EXIT("Error reallocating memory for mesh initialisation: %s\n", filePath);
+			for (int k = 0; k < 3; k++) {
+				array_append(&positionIndices, &positionIndex[k]);
+				array_append(&normalIndices, &normalIndex[k]);
+				array_append(&uvIndices, &uvIndex[k]);
 			}
-			positionIndices = tmp;
-			positionIndices[positionIndexCount - 3] = positionIndex[0];
-			positionIndices[positionIndexCount - 2] = positionIndex[1];
-			positionIndices[positionIndexCount - 1] = positionIndex[2];
-			uvIndexCount += 3;
-			tmp = realloc(uvIndices, uvIndexCount * sizeof(u32));
-			if (!tmp) {
-				fclose(fp);
-				ERROR_EXIT("Error reallocating memory for mesh initialisation: %s\n", filePath);
-			}
-			uvIndices = tmp;
-			uvIndices[uvIndexCount - 3] = uvIndex[0];
-			uvIndices[uvIndexCount - 2] = uvIndex[1];
-			uvIndices[uvIndexCount - 1] = uvIndex[2];
-			normalIndexCount += 3;
-			tmp = realloc(normalIndices, normalIndexCount * sizeof(u32));
-			if (!tmp) {
-				fclose(fp);
-				ERROR_EXIT("Error reallocating memory for mesh initialisation: %s\n", filePath);
-			}
-			normalIndices = tmp;
-			normalIndices[normalIndexCount - 3] = normalIndex[0];
-			normalIndices[normalIndexCount - 2] = normalIndex[1];
-			normalIndices[normalIndexCount - 1] = normalIndex[2];
 		}
 	}
 	fclose(fp);
 
-	// we now have all the data, need to process it into a pointer array of vertices, and a pointer array
-	// of indices, then we can call mesh_load_from_memory
-	Vertex* meshVertices = NULL;
-	u32 vertexCount = 0;
-	u32* meshIndices = NULL;
-	u32 indexCount = 0;
+	Array meshVertices = array_init(sizeof(Vertex));
+	Array meshIndices = array_init(sizeof(u32));
 
-	//TODO! instead of recreating a large list of vertices to then initialise the buffers,
-	//	it might make more sense to use some calls to glBufferData and glBufferSubData to map
-	//	the values directly. I'd have to look into how I could retain vertex deduplication though
-	for (u32 i = 0; i < positionIndexCount; i++) {
-		Vertex v = {0};
+	u32* finalPositionIndices = (u32*)positionIndices.data;
+	u32* finalNormalIndices = (u32*)normalIndices.data;
+	u32* finalUvIndices = (u32*)uvIndices.data;
 
-		u32 positionIndex = positionIndices[i] - 1;
-		u32 normalIndex = normalIndices[i] - 1;
-		u32 uvIndex = uvIndices[i] - 1;
+	for (u32 i = 0; i < positionIndices.length; i++) {
+		Vertex v = { 0 };
 
-		memcpy(v.position, &outPositions[positionIndex], sizeof(vec3));
-		memcpy(v.normal, &outNormals[normalIndex], sizeof(vec3));
-		memcpy(v.uv, &outUvs[uvIndex], sizeof(vec2));
+		u32 positionIndex = finalPositionIndices[i] - 1;
+		u32 normalIndex = finalNormalIndices[i] - 1;
+		u32 uvIndex = finalUvIndices[i] - 1;
+
+		memcpy(v.position, array_get(&positions, positionIndex), sizeof(vec3));
+		memcpy(v.normal, array_get(&normals, normalIndex), sizeof(vec3));
+		memcpy(v.uv, array_get(&uvs, uvIndex), sizeof(vec2));
 
 		i32 existingIndex = -1;
+		Vertex* existingVertices = (Vertex*)meshVertices.data;
 		// TODO! really bad performance, looping the entire thing just to check if a vertex is
 		// equal, Hash functionality would be much nicer :)
-		for (u32 j = 0; j < vertexCount; j++) {
-			if (vertices_are_equal(&meshVertices[j], &v)) {
+		for (u32 j = 0; j < meshVertices.length; j++) {
+			if (vertices_are_equal(&existingVertices[j], &v)) {
 				existingIndex = j;
 				break;
 			}
 		}
 
 		if (existingIndex >= 0) {
-			indexCount++;
-			tmp = realloc(meshIndices, indexCount * sizeof(u32));
-			if (!tmp) {
-				ERROR_EXIT("Error reallocating memory for mesh initialisation: %s\n", filePath);
-			}
-			meshIndices = tmp;
-			meshIndices[indexCount - 1] = existingIndex;
+			array_append(&meshIndices, &existingIndex);
 		}
 		else {
-			vertexCount++;
-			tmp = realloc(meshVertices, vertexCount * sizeof(Vertex));
-			if (!tmp) {
-				ERROR_EXIT("Error reallocating memory for mesh initialisation: %s\n", filePath);
-			}
-			meshVertices = tmp;
-			meshVertices[vertexCount - 1] = v;
-
-			indexCount++;
-			tmp = realloc(meshIndices, indexCount * sizeof(u32));
-			if (!tmp) {
-				ERROR_EXIT("Error reallocating memory for mesh initialisation: %s\n", filePath);
-			}
-			meshIndices = tmp;
-			meshIndices[indexCount - 1] = vertexCount - 1;
+			array_append(&meshVertices, &v);
+			u32 newIndex = (u32)(meshVertices.length - 1);
+			array_append(&meshIndices, &newIndex);
 		}
 	}
 
-	mesh_load_from_memory(mesh, meshVertices, vertexCount, meshIndices, indexCount);
+	mesh_load_from_memory(
+		mesh, 
+		(Vertex*)meshVertices.data, 
+		(u32)meshVertices.length, 
+		(u32*)meshIndices.data, 
+		(u32)meshIndices.length
+	);
 
-	free(outPositions);
-	free(outNormals);
-	free(outUvs);
-	free(positionIndices);
-	free(normalIndices);
-	free(uvIndices);
+	array_free(&positions);
+	array_free(&positionIndices);
+	array_free(&uvs);
+	array_free(&uvIndices);
+	array_free(&normals);
+	array_free(&normalIndices);
 
-	free(meshVertices);
-	free(meshIndices);
+	array_free(&meshVertices);
+	array_free(&meshIndices);
 }
 
 // TODO! WIP

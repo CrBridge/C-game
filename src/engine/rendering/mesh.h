@@ -4,7 +4,7 @@
 #include "../types.h"
 #include "../io/io.h"
 #include "../util.h"
-#include "../io/io.h"
+#include "../data/array.h"
 
 #include "vertex.h"
 #include "vbo.h"

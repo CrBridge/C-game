@@ -7,6 +7,11 @@ void texture_init(texture* id) {
 void texture_load_texture(texture* id, const char* texturePath) {
 	texture_bind(id);
 
+	//TODO a flip flag would be nice
+	// some textures will be loaded with the wrong orientation
+	// and I should have a funtion arg to set stbi_flip_vertically
+	// instead of needing to configure the files manually
+
 	// set sampler parameters, really should be configurable
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
@@ -19,17 +24,20 @@ void texture_load_texture(texture* id, const char* texturePath) {
 	if (!data) {
 		// Texture couldn't be read, fallback to this
 		fprintf(stderr, "Error reading texture: %s - defaulting\n", texturePath);
-		u8 color[16] = {0, 255, 0, 255 };
+		u8 color[4] = {0, 255, 0, 255 };
 		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, color);
 		texture_unbind();
 		return;
 	}
-
 	// TODO
 	// this currently loads in 4 channels no matter what - if I load a jpeg it would probably
 	// break. Might be worth actually using the channels value to grab the correct format
+	// TODO
+	// it has now broken. RGBA forces 4 channels even if there is only 3 causing segfaults.
+	// I need to vary the format used based on the number of channels that stb detected. should
+	// be an easy fix
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	
+
 	// not generating mipmaps for now, but might want to later
 	// if I do, I'll need to change the MIN_FILTER to MIPMAP_LINEAR or MIPMAP_NEAREST
 	//glGenerateMipmap(GL_TEXTURE_2D);
@@ -82,8 +90,4 @@ void texture_unbind(void) {
 
 void texture_clean(texture* id) {
 	glDeleteTextures(1, id);
-}
-
-void texture_clean_cube(texture* id) {
-	glDeleteTextures(6, id);
 }

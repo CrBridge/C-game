@@ -3,9 +3,6 @@
 
 #include "engine/window.h"
 
-#include "engine/rendering/vao.h"
-#include "engine/rendering/vbo.h"
-#include "engine/rendering/ebo.h"
 #include "engine/rendering/shader.h"
 #include "engine/rendering/texture.h"
 #include "engine/rendering/mesh.h"
@@ -14,6 +11,7 @@
 #include "engine/input/input.h"
 
 #include "engine/components/transform_component.h"
+#include "engine/components/skybox_component.h"
 
 #include "engine/rendering/fbo.h"
 #include "engine/rendering/rbo.h"
@@ -21,6 +19,8 @@
 #include "engine/game_object.h"
 
 #include "engine/camera.h"
+
+#include "engine/data/array.h"
 
 static void poll_input(int* shouldQuit)
 {
@@ -48,7 +48,7 @@ int main(int argc, char** argv)
 	if(!window_init_window(960, 544, "DAEMON")) {
 		return -1;
 	}
-
+	
 	input_init_keyboard_state();
 
 	// Init game loop variables
@@ -90,11 +90,6 @@ int main(int argc, char** argv)
 	floor.transform.position[1] -= 1.0f;
 	floor.transform.scale = 10.0f;
 
-	//cube for skybox
-	Mesh skyCube = { 0 };
-	mesh_load_sky_cube(&skyCube);
-	texture skyTexture;
-	texture_init(&skyTexture);
 	const char* skybox[6] = {
 		"./res/textures/skybox/right.png",
 		"./res/textures/skybox/left.png",
@@ -103,7 +98,7 @@ int main(int argc, char** argv)
 		"./res/textures/skybox/front.png",
 		"./res/textures/skybox/back.png",
 	};
-	texture_load_cube_texture(&skyTexture, skybox);
+	Skybox sky = skybox_init(skybox);
 
 	shader mainShader;
 	mainShader = shader_load("./res/shaders/default.vert", "./res/shaders/default.frag");
@@ -172,6 +167,18 @@ int main(int argc, char** argv)
 		}
 		if (input_is_key_down(SDL_SCANCODE_LSHIFT)) {
 			camera_move_camera_position(DOWN, &camera, dt);
+		} // moving donut
+		if (input_is_key_down(SDL_SCANCODE_UP)) {
+			donut.transform.position[1] += 1.0f * dt;
+		}
+		if (input_is_key_down(SDL_SCANCODE_DOWN)) {
+			donut.transform.position[1] -= 1.0f * dt;
+		}
+		if (input_is_key_down(SDL_SCANCODE_LEFT)) {
+			donut.transform.position[0] -= 1.0f * dt;
+		}
+		if (input_is_key_down(SDL_SCANCODE_RIGHT)) {
+			donut.transform.position[0] += 1.0f * dt;
 		}
 		input_update_previous_keyboard_state();
 		// ======================================================= //
@@ -199,8 +206,7 @@ int main(int argc, char** argv)
 		shader_set_mat4(&skyShader, "projection", &projection);
 		shader_set_mat4(&skyShader, "view", &view);
 		shader_set_float(&skyShader, "time", totalS);
-		texture_bind(&skyTexture);
-		mesh_draw(&skyCube);
+		skybox_draw(&sky);
 
 		// re-enable for objects
 		glDepthMask(GL_TRUE);
@@ -233,11 +239,10 @@ int main(int argc, char** argv)
 	// optional: cleaning up data
 	game_object_clean(&donut);
 	game_object_clean(&floor);
-	mesh_clean(&skyCube);
 	mesh_clean(&screenQuad);
 
 	texture_clean(&colorAttach);
-	texture_clean_cube(&skyTexture);
+	skybox_clean(&sky);
 
 	shader_clean(&mainShader);
 	shader_clean(&blitShader);

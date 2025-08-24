@@ -19,6 +19,5 @@ void texture_load_cube_texture(texture* id, const char** texturePaths);
 void texture_bind(texture* id);
 void texture_unbind(void);
 void texture_clean(texture* id);
-void texture_clean_cube(texture* id);
 
 #endif
