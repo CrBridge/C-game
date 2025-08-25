@@ -9,9 +9,9 @@
 #include <string.h>
 
 typedef struct vertex {
-	Vector3 position;
-	Vector3 normal;
-	Vector2 uv;
+	Vector3f position;
+	Vector3f normal;
+	Vector2f uv;
 } Vertex;
 
 // equals method? Do I need that? Might do when model loading

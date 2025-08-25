@@ -3,15 +3,18 @@
 
 #include "../types.h"
 
-typedef struct vector2 {
-	f32 x;
-	f32 y;
-} Vector2;
+// The benefit of these vectors is that they are identical in size to linmaths vec2/3.
+//	so hypothetically, I should still be able to use them in linmath functions,
+//	but I'll have to test that.
 
-typedef struct vector3 {
-	f32 x;
-	f32 y;
-	f32 z;
-} Vector3;
+typedef union {
+	struct { f32 x, y, z; };
+	f32 arr[3];
+} Vector3f;
+
+typedef union {
+	struct { f32 x, y; };
+	f32 arr[2];
+} Vector2f;
 
 #endif

@@ -67,7 +67,6 @@ int main(int argc, char** argv)
 
 	mat4x4 projection;
 	mat4x4_perspective(projection, degree_to_rad(45.0f), window_get_aspect(), 0.1f, 100.0f);
-	//mat4x4_ortho(projection, -1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 100.0f);
 
 	mat4x4 view;
 	Camera camera = {0};

@@ -55,10 +55,10 @@ void spritebatch_draw(Rectangle dst, Rectangle src, Texture* tex) {
 	f32 b = (f32)(src.y + src.height) / (f32)tex->height;
 
 	// Create and append vertices: TR-BR-BL-TL
-	array_append(&batch.vertices, &(Vertex) { .position = (Vector3){ dst.x + dst.width, dst.y, -1.0f }, .normal = (Vector3){ 0, 0, 0 }, .uv = (Vector2){ r, t } });
-	array_append(&batch.vertices, &(Vertex) { .position = (Vector3){ dst.x + dst.width, dst.y + dst.height, -1.0f }, .normal = (Vector3){ 0, 0, 0 }, .uv = (Vector2){ r, b } });
-	array_append(&batch.vertices, &(Vertex) { .position = (Vector3){ dst.x, dst.y + dst.height, -1.0f }, .normal = (Vector3){ 0, 0, 0 }, .uv = (Vector2){ l, b } });
-	array_append(&batch.vertices, &(Vertex) { .position = (Vector3){ dst.x, dst.y, -1.0f }, .normal = (Vector3){ 0, 0, 0 }, .uv = (Vector2){ l, t } });
+	array_append(&batch.vertices, &(Vertex) { .position = (Vector3f){ dst.x + dst.width, dst.y, -1.0f }, .normal = (Vector3f){ 0, 0, 0 }, .uv = (Vector2f){ r, t } });
+	array_append(&batch.vertices, &(Vertex) { .position = (Vector3f){ dst.x + dst.width, dst.y + dst.height, -1.0f }, .normal = (Vector3f){ 0, 0, 0 }, .uv = (Vector2f){ r, b } });
+	array_append(&batch.vertices, &(Vertex) { .position = (Vector3f){ dst.x, dst.y + dst.height, -1.0f }, .normal = (Vector3f){ 0, 0, 0 }, .uv = (Vector2f){ l, b } });
+	array_append(&batch.vertices, &(Vertex) { .position = (Vector3f){ dst.x, dst.y, -1.0f }, .normal = (Vector3f){ 0, 0, 0 }, .uv = (Vector2f){ l, t } });
 
 	u32 i0 = index + 0;
 	u32 i1 = index + 1;
