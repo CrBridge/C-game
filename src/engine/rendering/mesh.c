@@ -1,10 +1,12 @@
 #include "mesh.h"
 
 void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
-	//TODO! still not great, but the bottleneck at this point is
-	//	the vertex deduplication, and just the fact that I am reading text with fscanf
-	//	the fscanf could probably be sped up, but If I spend more time on this it should
-	//	be on improving the deduplication loop
+	//TODO! pretty good at this point
+	//	only thing to optimize at this point is the scanf usage
+	//	and I'm probably using more arrays than actually needed
+	//	Actually, I suppose if I declare unique_vertices at the start,
+	//	I could try constructing the vertex structs in the same pass I'm
+	//	reading the files and cut out the 2nd pass entirely
 
 	Array positions = array_init(sizeof(vec3));
 	Array normals = array_init(sizeof(vec3));
@@ -70,6 +72,8 @@ void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
 	u32* finalNormalIndices = (u32*)normalIndices.data;
 	u32* finalUvIndices = (u32*)uvIndices.data;
 
+	Map* uniqueVertices = map_create(vertices_map_hash, vertices_map_eq);
+
 	for (u32 i = 0; i < positionIndices.length; i++) {
 		Vertex v = { 0 };
 
@@ -81,23 +85,15 @@ void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
 		memcpy(v.normal, array_get(&normals, normalIndex), sizeof(vec3));
 		memcpy(v.uv, array_get(&uvs, uvIndex), sizeof(vec2));
 
-		i32 existingIndex = -1;
-		Vertex* existingVertices = (Vertex*)meshVertices.data;
-		// TODO! really bad performance, looping the entire thing just to check if a vertex is
-		// equal, Hash functionality would be much nicer :)
-		for (u32 j = 0; j < meshVertices.length; j++) {
-			if (vertices_are_equal(&existingVertices[j], &v)) {
-				existingIndex = j;
-				break;
-			}
-		}
+		u32* existingIndex = (u32*)map_get(uniqueVertices, &v, sizeof(Vertex));
 
-		if (existingIndex >= 0) {
-			array_append(&meshIndices, &existingIndex);
+		if (existingIndex) {
+			array_append(&meshIndices, existingIndex);
 		}
 		else {
+			u32 newIndex = (u32)meshVertices.length;
 			array_append(&meshVertices, &v);
-			u32 newIndex = (u32)(meshVertices.length - 1);
+			map_set(uniqueVertices, &v, sizeof(Vertex), &newIndex, sizeof(u32));
 			array_append(&meshIndices, &newIndex);
 		}
 	}
@@ -119,6 +115,8 @@ void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
 
 	array_free(&meshVertices);
 	array_free(&meshIndices);
+
+	map_free(uniqueVertices);
 }
 
 // TODO! WIP

@@ -11,13 +11,10 @@ Array array_init(size_t item_size) {
 }
 
 void array_append(Array* a, void* item) {
-	// array is at max capacity, need to reallocate
 	if (a->length == a->capacity) {
 		size_t new_cap = a->capacity * 2;
-		//printf("Resizing array from %zu to %zu\n", a->capacity, new_cap);
 		void* tmp = realloc(a->data, new_cap * a->item_size);
 		if (!tmp) {
-			// reallocation failed
 			ERROR_EXIT("Failed to allocate memory for a dynamic array");
 		}
 		a->data = tmp;
@@ -34,7 +31,6 @@ void array_append(Array* a, void* item) {
 // get the value at the given index, remember to cast and dereference, e.g. *(int*)array_get(&a, i)
 // also note, it may be quicker to just cast .data to the correct type pointer and index directly
 void* array_get(Array* a, size_t i) {
-	// should really check for out of bounds
 	if (i >= a->length) {
 		ERROR_EXIT("Attempted to index outside the bounds of the dynamic array");
 	}

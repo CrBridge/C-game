@@ -5,6 +5,7 @@
 #include "../io/io.h"
 #include "../util.h"
 #include "../data/array.h"
+#include "../data/map.h"
 
 #include "vertex.h"
 #include "vbo.h"

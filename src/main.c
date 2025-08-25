@@ -76,7 +76,7 @@ int main(int argc, char** argv)
 	//donut
 	GameObject donut;
 	game_object_init(&donut);
-	mesh_load_from_obj(&donut.mesh, "./res/models/donut.obj");
+	mesh_load_from_obj(&donut.mesh, "./res/models/viking_room.obj");
 	texture_load_texture(&donut.texId, "./res/textures/donut_diffuse.png");
 	donut.transform.rotation[0] = 180.0f;
 	donut.transform.rotation[2] = 45.0f;
