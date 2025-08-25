@@ -13,14 +13,15 @@
 #include "engine/components/transform_component.h"
 #include "engine/components/skybox_component.h"
 
-#include "engine/rendering/fbo.h"
-#include "engine/rendering/rbo.h"
-
 #include "engine/game_object.h"
 
 #include "engine/camera.h"
 
 #include "engine/data/array.h"
+
+#include "engine/rendering/renderer.h"
+
+#include "engine/rendering/sprite_batch.h"
 
 static void poll_input(int* shouldQuit)
 {
@@ -48,7 +49,11 @@ int main(int argc, char** argv)
 	if(!window_init_window(960, 544, "DAEMON")) {
 		return -1;
 	}
-	
+
+	renderer_init(480, 272);
+
+	spritebatch_init(480, 272);
+
 	input_init_keyboard_state();
 
 	// Init game loop variables
@@ -61,13 +66,26 @@ int main(int argc, char** argv)
 	// ===================== Matrix Init ===================== //
 
 	mat4x4 projection;
-	mat4x4_identity(projection);
 	mat4x4_perspective(projection, degree_to_rad(45.0f), window_get_aspect(), 0.1f, 100.0f);
+	//mat4x4_ortho(projection, -1.0f, 1.0f, -1.0f, 1.0f, 0.0f, 100.0f);
 
 	mat4x4 view;
 	Camera camera = {0};
 	camera_init(&camera);
 	camera.position[2] += 3.0f;
+
+	Rectangle srcTest = {
+		.x = 0,
+		.y = 0,
+		.width = 32,
+		.height = 32
+	};
+	Rectangle dstTest = {
+		.x = 0,
+		.y = 0,
+		.width = 50,
+		.height = 50
+	};
 
 	// ======================================================= //
 
@@ -76,8 +94,8 @@ int main(int argc, char** argv)
 	//donut
 	GameObject donut;
 	game_object_init(&donut);
-	mesh_load_from_obj(&donut.mesh, "./res/models/viking_room.obj");
-	texture_load_texture(&donut.texId, "./res/textures/donut_diffuse.png");
+	mesh_load_from_obj(&donut.mesh, "./res/models/donut.obj");
+	texture_load_texture(&donut.texture, "./res/textures/donut_diffuse.png");
 	donut.transform.rotation[0] = 180.0f;
 	donut.transform.rotation[2] = 45.0f;
 
@@ -85,7 +103,7 @@ int main(int argc, char** argv)
 	GameObject floor;
 	game_object_init(&floor);
 	mesh_load_quad(&floor.mesh);
-	texture_load_texture(&floor.texId, "./res/textures/box.png");
+	texture_load_texture(&floor.texture, "./res/textures/box.png");
 	floor.transform.rotation[0] = 270.0f;
 	floor.transform.position[1] -= 1.0f;
 	floor.transform.scale = 10.0f;
@@ -106,32 +124,14 @@ int main(int argc, char** argv)
 	shader blitShader;
 	blitShader = shader_load("./res/shaders/blit.vert", "./res/shaders/blit.frag");
 
+	shader controlShader;
+	controlShader = shader_load("./res/shaders/control.vert", "./res/shaders/control.frag");
+
 	shader skyShader;
 	skyShader = shader_load("./res/shaders/sky.vert", "./res/shaders/sky.frag");
 
 	// ======================================================= //
-
-	// ================== Framebuffer Init =================== //
-	
-	fbo fbo;
-	fbo_init(&fbo);
-	fbo_bind(&fbo);
-	texture colorAttach;
-	// TODO! dont hard code the width and height here, same with the rbo
-	//	and glViewport calls, these values should be stored somewhere
-	fbo_add_buffer(&colorAttach, 480, 272);
-
-	rbo rbo;
-	rbo_init(&rbo);
-	rbo_attach_depth_stencil_buffers(&rbo, 480, 272);
-	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-		ERROR_EXIT("Error on initalising the Framebuffer\n");
-	}
-	fbo_unbind();
-
-	Mesh screenQuad = {0};
-	mesh_load_screen_quad(&screenQuad);
-
+	int mode = 0;
 	// ======================================================= //
 	while (!shouldQuit) {
 		// delta time calculations
@@ -190,15 +190,7 @@ int main(int argc, char** argv)
 		component_transform_calculate_model_matrix(model, &donut.transform);
 		camera_get_view(view, &camera);
 
-		fbo_bind(&fbo);
-		glViewport(0, 0, 480, 272);
-
-		// enable depth testing when rendering the actual screen
-		glEnable(GL_DEPTH_TEST);
-
-		// rendering
-		glClearColor(0.08f, 0.1f, 0.1f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		renderer_begin_frame();
 
 		// disable depth writing for the skybox render
 		glDepthMask(GL_FALSE);
@@ -219,38 +211,28 @@ int main(int argc, char** argv)
 		shader_set_mat4(&mainShader, "model", &model);
 		game_object_draw(&floor);
 
-		fbo_unbind();
-		rbo_unbind();
-
-		glViewport(0, 0, 960, 544);
-		// disable depth testing incase it tries clipping the screen quad
-		glDisable(GL_DEPTH_TEST);
+		// UI Stage
+		spritebatch_begin(&controlShader);
+		spritebatch_draw(dstTest, srcTest, &floor.texture);
+		spritebatch_end();
 
 		shader_use(&blitShader);
 		shader_set_int(&blitShader, "frame", currentFrame);
-		texture_bind(&colorAttach);
-		mesh_draw(&screenQuad);
-
-		vao_unbind();
-
-		window_swap_buffer();
+		renderer_end_frame();
 	}
 
 	// optional: cleaning up data
 	game_object_clean(&donut);
 	game_object_clean(&floor);
-	mesh_clean(&screenQuad);
 
-	texture_clean(&colorAttach);
 	skybox_clean(&sky);
 
 	shader_clean(&mainShader);
 	shader_clean(&blitShader);
 	shader_clean(&skyShader);
 
-	fbo_clean(&fbo);
-	rbo_clean(&rbo);
-
+	spritebatch_clean();
+	renderer_clean();
 	window_clean_window();
 
 	return 0;

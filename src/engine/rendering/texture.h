@@ -7,17 +7,20 @@
 #include "../types.h"
 #include "../util.h"
 
-// we might eventually want an easy way to refer to the
-// width and height of a texture. At that point it should
-// probably become a struct
+typedef u32 tex_id;
 
-typedef u32 texture;
+typedef struct texture {
+	u32 id;
+	u16 width;
+	u16 height;
+} Texture;
 
-void texture_init(texture* id);
-void texture_load_texture(texture* id, const char* texturePath);
-void texture_load_cube_texture(texture* id, const char** texturePaths);
-void texture_bind(texture* id);
+void texture_init(Texture* id);
+void texture_load_texture(Texture* id, const char* texturePath);
+void texture_load_cube_texture(Texture* id, const char** texturePaths);
+void texture_bind(tex_id* id);
 void texture_unbind(void);
-void texture_clean(texture* id);
+void texture_clean(Texture* id);
+void texture_delete(tex_id* t);
 
 #endif

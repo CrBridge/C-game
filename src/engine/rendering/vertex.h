@@ -2,15 +2,16 @@
 #define VERTEX_H
 
 #include "../types.h"
+#include "../math/vector.h"
 
 #include <linmath.h>
 
 #include <string.h>
 
 typedef struct vertex {
-	vec3 position;
-	vec3 normal;
-	vec2 uv;
+	Vector3 position;
+	Vector3 normal;
+	Vector2 uv;
 } Vertex;
 
 // equals method? Do I need that? Might do when model loading

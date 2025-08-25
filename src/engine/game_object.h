@@ -23,11 +23,14 @@
 typedef struct gameObject {
 	Transform transform;
 	Mesh mesh;
-	texture texId;
+	Texture texture;
 } GameObject;
 
 void game_object_init(GameObject* g);
 void game_object_draw(GameObject* g);
+// allows passing in the mode used to draw the mesh
+// e.g. GL_LINES, GL_POINTS, etc.
+void game_object_draw_debug(GameObject* g, GLenum mode);
 void game_object_clean(GameObject* g);
 
 #endif

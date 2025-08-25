@@ -10,7 +10,7 @@ Skybox skybox_init(const char** texturePaths) {
 }
 
 void skybox_draw(Skybox* s) {
-	texture_bind(&s->cubemap);
+	texture_bind(&s->cubemap.id);
 	mesh_draw(&s->cube);
 }
 

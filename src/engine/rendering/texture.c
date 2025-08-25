@@ -1,11 +1,13 @@
 #include "texture.h"
 
-void texture_init(texture* id) {
-	glGenTextures(1, id);
+void texture_init(Texture* t) {
+	glGenTextures(1, &t->id);
+	t->width = 0;
+	t->height = 0;
 }
 
-void texture_load_texture(texture* id, const char* texturePath) {
-	texture_bind(id);
+void texture_load_texture(Texture* t, const char* texturePath) {
+	texture_bind(&t->id);
 
 	//TODO a flip flag would be nice
 	// some textures will be loaded with the wrong orientation
@@ -42,13 +44,16 @@ void texture_load_texture(texture* id, const char* texturePath) {
 	// if I do, I'll need to change the MIN_FILTER to MIPMAP_LINEAR or MIPMAP_NEAREST
 	//glGenerateMipmap(GL_TEXTURE_2D);
 
+	t->width = width;
+	t->height = height;
+
 	texture_unbind();
 
 	stbi_image_free(data);
 }
 
-void texture_load_cube_texture(texture* id, const char** texturePaths) {
-	texture_bind(id);
+void texture_load_cube_texture(Texture* t, const char** texturePaths) {
+	texture_bind(&t->id);
 
 	// set sampler parameters, really should be configurable
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -70,24 +75,32 @@ void texture_load_cube_texture(texture* id, const char** texturePaths) {
 		glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, 
 					GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
 		stbi_image_free(data);
+		t->height += height;
+		t->width += width;
 	}
 
 	texture_unbind();
 }
 
-void texture_bind(texture* id) {
+void texture_bind(tex_id* t) {
 	//TODO! I previously had this below line hardcoded into this function
 	//	but if I ever want a way to have multiple textures binded
 	//  e.g. normal maps, I'd need a way to configure the texture slot
 	//	im making active. I can pass an int and just add it to the 0 arg
 	//glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, *id);
+	glBindTexture(GL_TEXTURE_2D, *t);
 }
 
 void texture_unbind(void) {
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void texture_clean(texture* id) {
-	glDeleteTextures(1, id);
+void texture_clean(Texture* t) {
+	t->width = 0;
+	t->height = 0;
+	texture_delete(&t->id);
+}
+
+void texture_delete(tex_id* t) {
+	glDeleteTextures(1, t);
 }

@@ -1,5 +1,12 @@
 #include "window.h"
 
+typedef struct app {
+	SDL_Window* pWindow;
+	SDL_GLContext context;
+	u16 width;
+	u16 height;
+} App;
+
 static App appState = {0};
 
 i32 window_init_window(u16 width, u16 height, char* name) {
@@ -107,4 +114,12 @@ void window_swap_buffer(void) {
 
 f32 window_get_aspect(void) {
 	return (f32)appState.width / (f32)appState.height;
+}
+
+u16 window_get_width(void) {
+	return appState.width;
+}
+
+u16 window_get_height(void) {
+	return appState.height;
 }

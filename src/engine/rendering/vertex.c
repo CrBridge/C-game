@@ -2,20 +2,26 @@
 
 //TODO! should add to math_util some basic vec3_equal vec2_equal etc.
 int vertices_are_equal(Vertex* a, Vertex* b) {
-	if (a->position[0] == b->position[0] &&
-		a->position[1] == b->position[1] &&
-		a->position[2] == b->position[2] &&
-		a->normal[0] == b->normal[0] &&
-		a->normal[1] == b->normal[1] &&
-		a->normal[2] == b->normal[2] &&
-		a->uv[0] == b->uv[0] &&
-		a->uv[1] == b->uv[1]
+	if (a->position.x == b->position.x &&
+		a->position.y == b->position.y &&
+		a->position.z == b->position.z &&
+		a->normal.x == b->normal.x &&
+		a->normal.y == b->normal.y &&
+		a->normal.z == b->normal.z &&
+		a->uv.x == b->uv.x &&
+		a->uv.y == b->uv.y
 	) {
 		return 1; 
 	}
 
 	return 0;
 }
+
+//TODO! I get a pretty high collision rate on
+//	using these for my map. Given the hardcoded map size
+//	is far greater than the number of vertices I put in
+//	I'm pretty sure this hash function isn't great
+//	for context - given ~4500 vertices, I get ~1000 collisions
 
 static inline size_t fnv1a_update(size_t hash, const void* data, size_t len) {
 	const u8* bytes = (const u8*)data;
@@ -30,9 +36,9 @@ size_t vertices_map_hash(const void* key, size_t key_size) {
 	const Vertex* v = key;
 
 	size_t hash = 1469598103934665603ull;
-	hash = fnv1a_update(hash, v->position, sizeof(v->position));
-	hash = fnv1a_update(hash, v->normal, sizeof(v->normal));
-	hash = fnv1a_update(hash, v->uv, sizeof(v->uv));
+	hash = fnv1a_update(hash, &v->position, sizeof(v->position));
+	hash = fnv1a_update(hash, &v->normal, sizeof(v->normal));
+	hash = fnv1a_update(hash, &v->uv, sizeof(v->uv));
 
 	return hash;
 }

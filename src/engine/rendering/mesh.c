@@ -81,9 +81,9 @@ void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
 		u32 normalIndex = finalNormalIndices[i] - 1;
 		u32 uvIndex = finalUvIndices[i] - 1;
 
-		memcpy(v.position, array_get(&positions, positionIndex), sizeof(vec3));
-		memcpy(v.normal, array_get(&normals, normalIndex), sizeof(vec3));
-		memcpy(v.uv, array_get(&uvs, uvIndex), sizeof(vec2));
+		memcpy(&v.position, array_get(&positions, positionIndex), sizeof(vec3));
+		memcpy(&v.normal, array_get(&normals, normalIndex), sizeof(vec3));
+		memcpy(&v.uv, array_get(&uvs, uvIndex), sizeof(vec2));
 
 		u32* existingIndex = (u32*)map_get(uniqueVertices, &v, sizeof(Vertex));
 
@@ -167,6 +167,13 @@ void mesh_draw(Mesh* mesh) {
 	// I pass null here, when I have multiple models, will I need to ensure the ebo is binded again,
 	// or is that all just on init, and then I don't have to worry about it again?
 	glDrawElements(GL_TRIANGLES, mesh->indexCount, GL_UNSIGNED_INT, NULL);
+}
+
+void mesh_draw_debug(Mesh* mesh, GLenum mode) {
+	vao_bind(&mesh->vao);
+	// I pass null here, when I have multiple models, will I need to ensure the ebo is binded again,
+	// or is that all just on init, and then I don't have to worry about it again?
+	glDrawElements(mode, mesh->indexCount, GL_UNSIGNED_INT, NULL);
 }
 
 void mesh_clean(Mesh* mesh) {

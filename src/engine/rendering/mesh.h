@@ -29,6 +29,7 @@ typedef struct mesh {
 void mesh_load_from_obj(Mesh* mesh, const char* filePath);
 void mesh_load_from_memory(Mesh* mesh, Vertex* vertices, u32 vertexCount, u32* indices, u32 indexCount);
 void mesh_draw(Mesh* mesh);
+void mesh_draw_debug(Mesh* mesh, GLenum mode);
 void mesh_clean(Mesh* mesh);
 
 // some helpers for generating meshes without the need of a file or manually specifying vertices

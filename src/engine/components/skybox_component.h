@@ -6,7 +6,7 @@
 
 typedef struct skybox {
 	Mesh cube;
-	texture cubemap;
+	Texture cubemap;
 } Skybox;
 
 Skybox skybox_init(const char** texturePaths);

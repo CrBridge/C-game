@@ -4,7 +4,7 @@ void fbo_init(fbo* id) {
 	glGenFramebuffers(1, id);
 }
 
-void fbo_add_buffer(texture* id, u16 width, u16 height) {
+void fbo_add_buffer(tex_id* id, u16 width, u16 height) {
 	//TODO! bit hardcoded, could probably rework some of the
 	//	texture functions so I can call those instead
 	glGenTextures(1, id);
