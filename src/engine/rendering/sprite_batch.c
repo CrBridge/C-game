@@ -72,6 +72,20 @@ void spritebatch_draw(Rectangle dst, Rectangle src, Texture* tex) {
 	array_append(&batch.indices, &i0);
 }
 
+void spritebatch_draw_string(Vector2f dst, Font* f, const char* s, f32 scale) {
+	for (int i = 0; s[i]; i++) {
+		Rectangle char_src = font_get_src(s[i], f);
+		Rectangle char_dst = {
+			.x = dst.x + (i * f->char_width * scale),
+			.y = dst.y,
+			.height = f->char_height * scale,
+			.width = f->char_width * scale
+		};
+
+		spritebatch_draw(char_dst, char_src, f->fontset);
+	}
+}
+
 void spritebatch_render() {
 	if (!batch.bound_shader || !batch.bound_texture) return;
 

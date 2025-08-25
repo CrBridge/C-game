@@ -23,6 +23,8 @@
 
 #include "engine/rendering/sprite_batch.h"
 
+#include "engine/rendering/font.h"
+
 static void poll_input(int* shouldQuit)
 {
 	SDL_Event event;
@@ -76,14 +78,18 @@ int main(int argc, char** argv)
 	Rectangle srcTest = {
 		.x = 0,
 		.y = 0,
-		.width = 32,
-		.height = 32
+		.width = 70,
+		.height = 10
 	};
 	Rectangle dstTest = {
 		.x = 0,
 		.y = 0,
-		.width = 50,
-		.height = 50
+		.width = 120,
+		.height = 12
+	};
+	Vector2f vecTest = {
+		.x = 0,
+		.y = 0
 	};
 
 	// ======================================================= //
@@ -130,7 +136,16 @@ int main(int argc, char** argv)
 	skyShader = shader_load("./res/shaders/sky.vert", "./res/shaders/sky.frag");
 
 	// ======================================================= //
-	int mode = 0;
+	
+	//TODO! would be better if the font_init just loaded the texture too
+	Texture font_tex;
+	texture_init(&font_tex);
+	texture_load_texture(&font_tex, "./res/textures/font-testing.png");
+	Font font = font_init("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!?.,/-%()[]\":#", &font_tex, 10, 10);
+	Texture bg;
+	texture_init(&bg);
+	texture_load_from_color(&bg, (u8[4]) { 0, 150, 25, 190 });
+
 	// ======================================================= //
 	while (!shouldQuit) {
 		// delta time calculations
@@ -211,8 +226,10 @@ int main(int argc, char** argv)
 		game_object_draw(&floor);
 
 		// UI Stage
+		glDisable(GL_DEPTH_TEST);
 		spritebatch_begin(&controlShader);
-		spritebatch_draw(dstTest, srcTest, &floor.texture);
+		spritebatch_draw(dstTest, srcTest, &bg);
+		spritebatch_draw_string(vecTest, &font, "HELLO WORLD!", 1.0f);
 		spritebatch_end();
 
 		shader_use(&blitShader);
@@ -229,6 +246,9 @@ int main(int argc, char** argv)
 	shader_clean(&mainShader);
 	shader_clean(&blitShader);
 	shader_clean(&skyShader);
+
+	font_clean(&font);
+	texture_clean(&bg);
 
 	spritebatch_clean();
 	renderer_clean();

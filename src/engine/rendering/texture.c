@@ -82,6 +82,23 @@ void texture_load_cube_texture(Texture* t, const char** texturePaths) {
 	texture_unbind();
 }
 
+void texture_load_from_color(Texture* t, u8 color[4]) {
+	texture_bind(&t->id);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, color);
+	texture_unbind();
+
+	t->width = 1;
+	t->height = 1;
+	
+	return;
+}
+
 void texture_bind(tex_id* t) {
 	//TODO! I previously had this below line hardcoded into this function
 	//	but if I ever want a way to have multiple textures binded
