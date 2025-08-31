@@ -1,5 +1,19 @@
 #include "renderer.h"
 
+//TODO! heres an idea, the struct also stores any values that a shader may use as a uniform
+// (except model matrix), then it can also store current bound shader, then I can call a function
+// to render something by passing in the game object and the shader I want to use for it. It then
+// checks if the shader passed in is different to the current bound one and if it is, we can call
+// a function to bind it and set all its uniforms, but how do we know what uniforms to use?
+// a solution is to just call all of them but thats a bit annoying. Also, how do we account
+// for special systems, e.g. A skybox is not a gameobject, shell texturing requires multiple
+// draw calls etc. do those vtable things solve this? Idk but I should look into them they
+// sounded interesting
+
+// Simpler system might be just to have game object store an enum for its 'Render System'
+// enum could store default, skybox, shells etc. and the game object draw function could use
+// a switch statement to handle how this is used
+
 typedef struct renderer {
 	int native_width, native_height;
 	fbo fbo;

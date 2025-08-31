@@ -123,3 +123,7 @@ u16 window_get_width(void) {
 u16 window_get_height(void) {
 	return appState.height;
 }
+
+SDL_Window* window_get_window(void) {
+	return appState.pWindow;
+}

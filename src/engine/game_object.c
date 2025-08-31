@@ -3,6 +3,7 @@
 void game_object_init(GameObject* g) {
 	component_transform_init(&g->transform);
 	texture_init(&g->texture);
+	//g->selected = 0;
 }
 
 void game_object_draw(GameObject* g) {

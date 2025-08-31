@@ -10,7 +10,7 @@ void fbo_add_buffer(tex_id* id, u16 width, u16 height) {
 	glGenTextures(1, id);
 	glBindTexture(GL_TEXTURE_2D, *id);
 
-	//colour attachment
+	//colour attachment, pass in RGBA4 for internalformat to reduce the color depth to 16bit
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);

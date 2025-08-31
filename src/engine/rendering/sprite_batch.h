@@ -16,8 +16,8 @@
 
 void spritebatch_init(int nativeWidth, int nativeHeight);
 void spritebatch_begin(shader* s);
-void spritebatch_draw(Rectangle dst, Rectangle src, Texture* t);
-void spritebatch_draw_string(Vector2f dst, Font* f, const char* s, f32 scale);
+void spritebatch_draw(Rectangle dst, Rectangle src, Texture* t, Vector3f color);
+void spritebatch_draw_string(Vector2f dst, Font* f, const char* s, f32 scale, Vector3f color);
 void spritebatch_end();
 void spritebatch_clean();
 

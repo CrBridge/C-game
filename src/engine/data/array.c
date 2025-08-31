@@ -32,9 +32,25 @@ void array_append(Array* a, void* item) {
 // also note, it may be quicker to just cast .data to the correct type pointer and index directly
 void* array_get(Array* a, size_t i) {
 	if (i >= a->length) {
-		ERROR_EXIT("Attempted to index outside the bounds of the dynamic array");
+		ERROR_EXIT("Attempted to index outside the bounds of the dynamic array\n");
 	}
 	return (char*)a->data + (i * a->item_size);
+}
+
+//TODO! may eventually require a consistent array order, so should have another delete implementation
+//	that retains order as well (e.g. left shift elements after index or some such)
+void array_remove_swapback(Array* a, size_t i) {
+	if (i >= a->length) {
+		ERROR_EXIT("Attempted to delete an index outside the current array bounds\n");
+	}
+	size_t tail = a->length - 1;
+	
+	if (i != tail) {
+		void* src = (char*)a->data + (tail * a->item_size);
+		void* dst = (char*)a->data + (i * a->item_size);
+		memcpy(dst, src, a->item_size);
+	}
+	a->length--;
 }
 
 void array_free(Array* a) {

@@ -3,6 +3,7 @@
 bool* previous_keyboard_state = NULL;
 const bool* current_keyboard_state = NULL;
 int num_keys = 0;
+int toggle = 0;
 
 void input_init_keyboard_state(void) {
 	current_keyboard_state = SDL_GetKeyboardState(&num_keys);
@@ -37,4 +38,15 @@ bool input_is_key_pressed(SDL_Scancode key) {
 bool input_is_key_released(SDL_Scancode key) {
 	return !current_keyboard_state[key] &&
 		previous_keyboard_state[key];
+}
+
+void input_toggle_input(void) {
+	if (toggle) {
+		toggle = 0;
+		SDL_SetWindowRelativeMouseMode(window_get_window(), true);
+	}
+	else {
+		toggle = 1;
+		SDL_SetWindowRelativeMouseMode(window_get_window(), false);
+	}
 }

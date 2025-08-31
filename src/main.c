@@ -3,27 +3,28 @@
 
 #include "engine/window.h"
 
+#include "engine/rendering/sprite_batch.h"
+#include "engine/rendering/renderer.h"
+
 #include "engine/rendering/shader.h"
 #include "engine/rendering/texture.h"
 #include "engine/rendering/mesh.h"
+#include "engine/rendering/font.h"
 
+#include "engine/math/rectangle.h"
+#include "engine/math/vector.h"
 #include "engine/math_util.h"
+
 #include "engine/input/input.h"
 
 #include "engine/components/transform_component.h"
 #include "engine/components/skybox_component.h"
 
 #include "engine/game_object.h"
-
 #include "engine/camera.h"
 
 #include "engine/data/array.h"
-
-#include "engine/rendering/renderer.h"
-
-#include "engine/rendering/sprite_batch.h"
-
-#include "engine/rendering/font.h"
+#include "engine/data/map.h"
 
 static void poll_input(int* shouldQuit)
 {
@@ -51,7 +52,6 @@ int main(int argc, char** argv)
 	if(!window_init_window(960, 544, "DAEMON")) {
 		return -1;
 	}
-
 	renderer_init(480, 272);
 
 	spritebatch_init(480, 272);
@@ -62,7 +62,6 @@ int main(int argc, char** argv)
 	int shouldQuit = 0;
 	f32 dt = 0.0f;
 	f32 lastFrame = 0.0f;
-	f32 totalTime = 0.0f;
 	u32 currentFrame = 0;
 
 	// ===================== Matrix Init ===================== //
@@ -75,6 +74,7 @@ int main(int argc, char** argv)
 	camera_init(&camera);
 	camera.position[2] += 3.0f;
 
+	// initalising positions for spritebatch drawing
 	Rectangle srcTest = {
 		.x = 0,
 		.y = 0,
@@ -96,6 +96,9 @@ int main(int argc, char** argv)
 
 	// ============= Mesh, Shader & Texture Init ============= //
 
+	// game object array
+	Array game_objects = array_init(sizeof(GameObject));
+
 	//donut
 	GameObject donut;
 	game_object_init(&donut);
@@ -103,16 +106,17 @@ int main(int argc, char** argv)
 	texture_load_texture(&donut.texture, "./res/textures/donut_diffuse.png");
 	donut.transform.rotation[0] = 180.0f;
 	donut.transform.rotation[2] = 45.0f;
+	array_append(&game_objects, &donut);
 
-	//floor quad
-	GameObject floor;
-	game_object_init(&floor);
-	mesh_load_quad(&floor.mesh);
-	texture_load_texture(&floor.texture, "./res/textures/box.png");
-	floor.transform.rotation[0] = 270.0f;
-	floor.transform.position[1] -= 1.0f;
-	floor.transform.scale = 10.0f;
+	GameObject ground;
+	game_object_init(&ground);
+	mesh_load_quad(&ground.mesh);
+	texture_load_from_color(&ground.texture, (u8[4]) { 50, 130, 10, 255 });
+	ground.transform.rotation[0] = 270.0f;
+	ground.transform.scale = 20.0f;
+	ground.transform.position[1] = -1.0f;
 
+	// skybox
 	const char* skybox[6] = {
 		"./res/textures/skybox/right.png",
 		"./res/textures/skybox/left.png",
@@ -126,6 +130,9 @@ int main(int argc, char** argv)
 	shader mainShader;
 	mainShader = shader_load("./res/shaders/default.vert", "./res/shaders/default.frag");
 
+	shader shellShader;
+	shellShader = shader_load("./res/shaders/shell.vert", "./res/shaders/shell.frag");
+
 	shader blitShader;
 	blitShader = shader_load("./res/shaders/blit.vert", "./res/shaders/blit.frag");
 
@@ -135,7 +142,7 @@ int main(int argc, char** argv)
 	shader skyShader;
 	skyShader = shader_load("./res/shaders/sky.vert", "./res/shaders/sky.frag");
 
-	// ======================================================= //
+	// ================== Font & Sprite Init ================== //
 	
 	//TODO! would be better if the font_init just loaded the texture too
 	Texture font_tex;
@@ -144,7 +151,7 @@ int main(int argc, char** argv)
 	Font font = font_init("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!?.,/-%()[]\":#", &font_tex, 10, 10);
 	Texture bg;
 	texture_init(&bg);
-	texture_load_from_color(&bg, (u8[4]) { 0, 150, 25, 190 });
+	texture_load_from_color(&bg, (u8[4]) { 255, 255, 255, 255 });
 
 	// ======================================================= //
 	while (!shouldQuit) {
@@ -153,13 +160,10 @@ int main(int argc, char** argv)
 		f32 totalS = (f32)totalMs / SDL_MS_PER_SECOND;
 		dt = totalS - lastFrame;
 		lastFrame = totalS;
-		totalTime += totalS;
 		currentFrame++;
-
 		// ================ Input & Event Polling ================ //
 		poll_input(&shouldQuit);
 		input_update_current_keyboard_state();
-		// input - must occur before previous state is updated
 		float x, y;
 		SDL_GetRelativeMouseState(&x, &y);
 		camera_move_camera_target(x, y, &camera);
@@ -181,27 +185,13 @@ int main(int argc, char** argv)
 		}
 		if (input_is_key_down(SDL_SCANCODE_LSHIFT)) {
 			camera_move_camera_position(DOWN, &camera, dt);
-		} // moving donut
-		if (input_is_key_down(SDL_SCANCODE_UP)) {
-			donut.transform.position[1] += 1.0f * dt;
-		}
-		if (input_is_key_down(SDL_SCANCODE_DOWN)) {
-			donut.transform.position[1] -= 1.0f * dt;
-		}
-		if (input_is_key_down(SDL_SCANCODE_LEFT)) {
-			donut.transform.position[0] -= 1.0f * dt;
-		}
-		if (input_is_key_down(SDL_SCANCODE_RIGHT)) {
-			donut.transform.position[0] += 1.0f * dt;
 		}
 		input_update_previous_keyboard_state();
 		// ======================================================= //
 
-		//TODO! having to set the matrices for multiple shaders is annoying, I think
-		//	uniform buffer objects solve this?
 		mat4x4 model;
-		donut.transform.rotation[1] += dt * 20.0f;
-		component_transform_calculate_model_matrix(model, &donut.transform);
+		((GameObject*)game_objects.data)[0].transform.rotation[1] += dt * 20.0f;
+
 		camera_get_view(view, &camera);
 
 		renderer_begin_frame();
@@ -217,21 +207,41 @@ int main(int argc, char** argv)
 		// re-enable for objects
 		glDepthMask(GL_TRUE);
 		shader_use(&mainShader);
-		shader_set_mat4(&mainShader, "model", &model);
 		shader_set_mat4(&mainShader, "projection", &projection);
 		shader_set_mat4(&mainShader, "view", &view);
-		game_object_draw(&donut);
-		component_transform_calculate_model_matrix(model, &floor.transform);
-		shader_set_mat4(&mainShader, "model", &model);
-		game_object_draw(&floor);
+		shader_set_float(&mainShader, "time", totalS);
+		for (int i = 0; i < game_objects.length; i++) {
+			GameObject* g = (GameObject*)game_objects.data;
+			component_transform_calculate_model_matrix(model, &g[i].transform);
+			shader_set_mat4(&mainShader, "model", &model);
+			game_object_draw(&g[i]);
+		}
+
+		// shell texturing, need more work until I can put objects with
+		// unique render systems into the objects array
+		shader_use(&shellShader);
+		shader_set_mat4(&shellShader, "projection", &projection);
+		shader_set_mat4(&shellShader, "view", &view);
+		f32 threshold = 0.0f;
+		for (int i = 0; i < 16; i++) {
+			component_transform_calculate_model_matrix(model, &ground.transform);
+			shader_set_mat4(&shellShader, "model", &model);
+			shader_set_float(&shellShader, "threshold", threshold);
+			game_object_draw(&ground);
+			threshold += 0.1f;
+			ground.transform.position[1] += 0.025f;
+		}
+		ground.transform.position[1] = -1.0f;
 
 		// UI Stage
 		glDisable(GL_DEPTH_TEST);
 		spritebatch_begin(&controlShader);
-		spritebatch_draw(dstTest, srcTest, &bg);
-		spritebatch_draw_string(vecTest, &font, "HELLO WORLD!", 1.0f);
+		spritebatch_draw(dstTest, srcTest, &bg, (Vector3f){0, 0, 1.0});
+		//spritebatch_draw_string(vecTest, &font, "HELLO WORLD!", 1.0f, (Vector3f){1,1,1});
+		spritebatch_draw_string(vecTest, &font, "WHATS GOING ON?", 1.0f, (Vector3f) { 1, 1, 1 });
 		spritebatch_end();
 
+		// scale resolution / blit to screen
 		shader_use(&blitShader);
 		shader_set_int(&blitShader, "frame", currentFrame);
 		renderer_end_frame();
@@ -239,7 +249,7 @@ int main(int argc, char** argv)
 
 	// optional: cleaning up data
 	game_object_clean(&donut);
-	game_object_clean(&floor);
+	game_object_clean(&ground);
 
 	skybox_clean(&sky);
 

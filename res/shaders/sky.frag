@@ -2,7 +2,7 @@
 
 in vec3 frag_uv;
 
-out vec4 frag_color;
+out vec4 out_color;
 
 uniform samplerCube skybox;
 
@@ -17,6 +17,6 @@ float hash13(vec3 p3)
 
 void main()
 {
-    frag_color = texture(skybox, frag_uv);
+    out_color = texture(skybox, frag_uv);
 	//frag_color = vec4(vec3(hash13(vec3(texture(skybox, frag_uv)))), 1.0);
 }  

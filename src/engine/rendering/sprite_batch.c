@@ -40,7 +40,7 @@ void spritebatch_begin(shader* s) {
 	//memcpy(batch.matrix, m, sizeof(mat4x4));
 }
 
-void spritebatch_draw(Rectangle dst, Rectangle src, Texture* tex) {
+void spritebatch_draw(Rectangle dst, Rectangle src, Texture* tex, Vector3f color) {
 	if (batch.bound_texture && batch.bound_texture->id != tex->id) {
 		spritebatch_end();
 		spritebatch_begin(batch.bound_shader);
@@ -54,11 +54,15 @@ void spritebatch_draw(Rectangle dst, Rectangle src, Texture* tex) {
 	f32 r = (f32)(src.x + src.width) / (f32)tex->width;
 	f32 b = (f32)(src.y + src.height) / (f32)tex->height;
 
+	//TODO! so now I interpret normals as color which is nice, but really I'd want color to have an alpha
+	// component as well, so its not perfect. Again, I really should just make more than one type
+	// of vertex
+
 	// Create and append vertices: TR-BR-BL-TL
-	array_append(&batch.vertices, &(Vertex) { .position = (Vector3f){ dst.x + dst.width, dst.y, -1.0f }, .normal = (Vector3f){ 0, 0, 0 }, .uv = (Vector2f){ r, t } });
-	array_append(&batch.vertices, &(Vertex) { .position = (Vector3f){ dst.x + dst.width, dst.y + dst.height, -1.0f }, .normal = (Vector3f){ 0, 0, 0 }, .uv = (Vector2f){ r, b } });
-	array_append(&batch.vertices, &(Vertex) { .position = (Vector3f){ dst.x, dst.y + dst.height, -1.0f }, .normal = (Vector3f){ 0, 0, 0 }, .uv = (Vector2f){ l, b } });
-	array_append(&batch.vertices, &(Vertex) { .position = (Vector3f){ dst.x, dst.y, -1.0f }, .normal = (Vector3f){ 0, 0, 0 }, .uv = (Vector2f){ l, t } });
+	array_append(&batch.vertices, &(Vertex) { .position = (Vector3f){ dst.x + dst.width, dst.y, -1.0f }, .normal = color, .uv = (Vector2f){ r, t } });
+	array_append(&batch.vertices, &(Vertex) { .position = (Vector3f){ dst.x + dst.width, dst.y + dst.height, -1.0f }, .normal = color, .uv = (Vector2f){ r, b } });
+	array_append(&batch.vertices, &(Vertex) { .position = (Vector3f){ dst.x, dst.y + dst.height, -1.0f }, .normal = color, .uv = (Vector2f){ l, b } });
+	array_append(&batch.vertices, &(Vertex) { .position = (Vector3f){ dst.x, dst.y, -1.0f }, .normal = color, .uv = (Vector2f){ l, t } });
 
 	u32 i0 = index + 0;
 	u32 i1 = index + 1;
@@ -72,7 +76,7 @@ void spritebatch_draw(Rectangle dst, Rectangle src, Texture* tex) {
 	array_append(&batch.indices, &i0);
 }
 
-void spritebatch_draw_string(Vector2f dst, Font* f, const char* s, f32 scale) {
+void spritebatch_draw_string(Vector2f dst, Font* f, const char* s, f32 scale, Vector3f color) {
 	for (int i = 0; s[i]; i++) {
 		Rectangle char_src = font_get_src(s[i], f);
 		Rectangle char_dst = {
@@ -82,7 +86,7 @@ void spritebatch_draw_string(Vector2f dst, Font* f, const char* s, f32 scale) {
 			.width = f->char_width * scale
 		};
 
-		spritebatch_draw(char_dst, char_src, f->fontset);
+		spritebatch_draw(char_dst, char_src, f->fontset, color);
 	}
 }
 

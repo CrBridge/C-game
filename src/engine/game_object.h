@@ -1,8 +1,3 @@
-// I do still like the idea of doing a game, it just has to be very simply
-// very important - im not making an engine here, just a game
-// so my implementation can be as niche and unversatile as I want
-// as long as it gets it done :)
-
 #ifndef GAME_OBJECT_H
 #define GAME_OBJECT_H
 
@@ -19,11 +14,14 @@
 // reassign the value + the shaders uniforms. This is doubly needed as without
 // the shader ref, I can't use transform in draw either,since there is
 // no uniform to set
+// wrote more on this in renderer, but having it store a render_type enum value
+// that controls how its drawn via a switch statement could be a solution
 
 typedef struct gameObject {
 	Transform transform;
 	Mesh mesh;
 	Texture texture;
+	//u8 selected; debug
 } GameObject;
 
 void game_object_init(GameObject* g);

@@ -14,5 +14,6 @@ void window_swap_buffer(void);
 f32 window_get_aspect(void);
 u16 window_get_width(void);
 u16 window_get_height(void);
+SDL_Window* window_get_window(void);
 
 #endif

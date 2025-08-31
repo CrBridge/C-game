@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "../window.h"
 #include "../util.h"
 #include "../types.h"
 
@@ -18,5 +19,7 @@ bool input_is_key_up(SDL_Scancode key);
 bool input_is_key_down(SDL_Scancode key);
 bool input_is_key_pressed(SDL_Scancode key);
 bool input_is_key_released(SDL_Scancode key);
+
+void input_toggle_input(void);
 
 #endif
