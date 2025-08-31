@@ -13,6 +13,8 @@ typedef struct spritebatch {
 static SpriteBatch batch = { 0 };
 static mat4x4 projection;
 
+shader control_shader;
+
 void spritebatch_init(int nativeWidth, int nativeHeight) {
 	batch.indices = array_init(sizeof(u32));
 	batch.vertices = array_init(sizeof(Vertex));
@@ -33,17 +35,21 @@ void spritebatch_init(int nativeWidth, int nativeHeight) {
 	vao_setup_vbo_attrib(&batch.vbo, 2, 2, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, uv));
 
 	mat4x4_ortho(projection, 0, nativeWidth, nativeHeight, 0, 0.1f, 100.0f);
+
+	control_shader = shader_load("./res/shaders/control.vert", "./res/shaders/control.frag");
 }
 
-void spritebatch_begin(shader* s) {
-	batch.bound_shader = s;
-	//memcpy(batch.matrix, m, sizeof(mat4x4));
+// again, similar to how I refactored rendering, if I want additional shaders to use with spritebatch,
+// I'll register them alongside control_shader and have some kind of enum to switch them
+void spritebatch_begin() {
+	glDisable(GL_DEPTH_TEST);
+	batch.bound_shader = &control_shader;
 }
 
 void spritebatch_draw(Rectangle dst, Rectangle src, Texture* tex, Vector3f color) {
 	if (batch.bound_texture && batch.bound_texture->id != tex->id) {
 		spritebatch_end();
-		spritebatch_begin(batch.bound_shader);
+		spritebatch_begin();
 	}
 	batch.bound_texture = tex;
 
@@ -120,6 +126,8 @@ void spritebatch_end() {
 }
 
 void spritebatch_clean() {
+	shader_clean(&control_shader);
+
 	array_free(&batch.vertices);
 	array_free(&batch.indices);
 

@@ -17,14 +17,25 @@
 // wrote more on this in renderer, but having it store a render_type enum value
 // that controls how its drawn via a switch statement could be a solution
 
+
+// NOTE: not all values here should be used on a game object, e.g. blit, control & sky
+//	they are just here to keep consistency with some code in renderer
+typedef enum {
+	RENDER_DEFAULT,
+	RENDER_SHELL,
+	RENDER_SKY,
+	RENDER_CONTROL,
+	RENDER_BLIT
+} RenderType;
+
 typedef struct gameObject {
 	Transform transform;
 	Mesh mesh;
 	Texture texture;
-	//u8 selected; debug
+	RenderType type;
 } GameObject;
 
-void game_object_init(GameObject* g);
+void game_object_init(GameObject* g, RenderType type);
 void game_object_draw(GameObject* g);
 // allows passing in the mode used to draw the mesh
 // e.g. GL_LINES, GL_POINTS, etc.

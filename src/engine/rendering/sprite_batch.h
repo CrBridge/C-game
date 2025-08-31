@@ -15,7 +15,7 @@
 #include <linmath.h>
 
 void spritebatch_init(int nativeWidth, int nativeHeight);
-void spritebatch_begin(shader* s);
+void spritebatch_begin();
 void spritebatch_draw(Rectangle dst, Rectangle src, Texture* t, Vector3f color);
 void spritebatch_draw_string(Vector2f dst, Font* f, const char* s, f32 scale, Vector3f color);
 void spritebatch_end();

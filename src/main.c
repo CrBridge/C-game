@@ -43,6 +43,7 @@ static void poll_input(int* shouldQuit)
 			}
 			break;
 		}
+		// TODO: support resizing?
 	}
 }
 
@@ -52,9 +53,7 @@ int main(int argc, char** argv)
 	if(!window_init_window(960, 544, "DAEMON")) {
 		return -1;
 	}
-	renderer_init(480, 272);
-
-	spritebatch_init(480, 272);
+	renderer_init(480, 272); // also initialises spritebatch
 
 	input_init_keyboard_state();
 
@@ -101,7 +100,7 @@ int main(int argc, char** argv)
 
 	//donut
 	GameObject donut;
-	game_object_init(&donut);
+	game_object_init(&donut, RENDER_DEFAULT);
 	mesh_load_from_obj(&donut.mesh, "./res/models/donut.obj");
 	texture_load_texture(&donut.texture, "./res/textures/donut_diffuse.png");
 	donut.transform.rotation[0] = 180.0f;
@@ -109,12 +108,13 @@ int main(int argc, char** argv)
 	array_append(&game_objects, &donut);
 
 	GameObject ground;
-	game_object_init(&ground);
+	game_object_init(&ground, RENDER_SHELL);
 	mesh_load_quad(&ground.mesh);
 	texture_load_from_color(&ground.texture, (u8[4]) { 50, 130, 10, 255 });
 	ground.transform.rotation[0] = 270.0f;
 	ground.transform.scale = 20.0f;
 	ground.transform.position[1] = -1.0f;
+	array_append(&game_objects, &ground);
 
 	// skybox
 	const char* skybox[6] = {
@@ -126,22 +126,6 @@ int main(int argc, char** argv)
 		"./res/textures/skybox/back.png",
 	};
 	Skybox sky = skybox_init(skybox);
-
-	shader mainShader;
-	mainShader = shader_load("./res/shaders/default.vert", "./res/shaders/default.frag");
-
-	shader shellShader;
-	shellShader = shader_load("./res/shaders/shell.vert", "./res/shaders/shell.frag");
-
-	shader blitShader;
-	blitShader = shader_load("./res/shaders/blit.vert", "./res/shaders/blit.frag");
-
-	shader controlShader;
-	controlShader = shader_load("./res/shaders/control.vert", "./res/shaders/control.frag");
-
-	shader skyShader;
-	skyShader = shader_load("./res/shaders/sky.vert", "./res/shaders/sky.frag");
-
 	// ================== Font & Sprite Init ================== //
 	
 	//TODO! would be better if the font_init just loaded the texture too
@@ -189,73 +173,37 @@ int main(int argc, char** argv)
 		input_update_previous_keyboard_state();
 		// ======================================================= //
 
-		mat4x4 model;
 		((GameObject*)game_objects.data)[0].transform.rotation[1] += dt * 20.0f;
 
 		camera_get_view(view, &camera);
 
-		renderer_begin_frame();
+		renderer_begin_frame(&projection, &view, totalS, currentFrame);
 
-		// disable depth writing for the skybox render
-		glDepthMask(GL_FALSE);
-		shader_use(&skyShader);
-		shader_set_mat4(&skyShader, "projection", &projection);
-		shader_set_mat4(&skyShader, "view", &view);
-		shader_set_float(&skyShader, "time", totalS);
-		skybox_draw(&sky);
+		renderer_draw_skybox(&sky);
 
-		// re-enable for objects
-		glDepthMask(GL_TRUE);
-		shader_use(&mainShader);
-		shader_set_mat4(&mainShader, "projection", &projection);
-		shader_set_mat4(&mainShader, "view", &view);
-		shader_set_float(&mainShader, "time", totalS);
 		for (int i = 0; i < game_objects.length; i++) {
 			GameObject* g = (GameObject*)game_objects.data;
-			component_transform_calculate_model_matrix(model, &g[i].transform);
-			shader_set_mat4(&mainShader, "model", &model);
-			game_object_draw(&g[i]);
+			renderer_draw_game_object(&g[i]);
 		}
-
-		// shell texturing, need more work until I can put objects with
-		// unique render systems into the objects array
-		shader_use(&shellShader);
-		shader_set_mat4(&shellShader, "projection", &projection);
-		shader_set_mat4(&shellShader, "view", &view);
-		f32 threshold = 0.0f;
-		for (int i = 0; i < 16; i++) {
-			component_transform_calculate_model_matrix(model, &ground.transform);
-			shader_set_mat4(&shellShader, "model", &model);
-			shader_set_float(&shellShader, "threshold", threshold);
-			game_object_draw(&ground);
-			threshold += 0.1f;
-			ground.transform.position[1] += 0.025f;
-		}
-		ground.transform.position[1] = -1.0f;
 
 		// UI Stage
-		glDisable(GL_DEPTH_TEST);
-		spritebatch_begin(&controlShader);
+		spritebatch_begin();
 		spritebatch_draw(dstTest, srcTest, &bg, (Vector3f){0, 0, 1.0});
-		//spritebatch_draw_string(vecTest, &font, "HELLO WORLD!", 1.0f, (Vector3f){1,1,1});
-		spritebatch_draw_string(vecTest, &font, "WHATS GOING ON?", 1.0f, (Vector3f) { 1, 1, 1 });
+		spritebatch_draw_string(vecTest, &font, "HELLO WORLD!", 1.0f, (Vector3f){1,1,1});
 		spritebatch_end();
 
 		// scale resolution / blit to screen
-		shader_use(&blitShader);
-		shader_set_int(&blitShader, "frame", currentFrame);
 		renderer_end_frame();
 	}
 
-	// optional: cleaning up data
-	game_object_clean(&donut);
-	game_object_clean(&ground);
+	// optional - cleaning up data
+	for (int i = 0; i < game_objects.length; i++) {
+		GameObject* g = game_objects.data;
+		game_object_clean(&g[i]);
+	}
+	array_free(&game_objects);
 
 	skybox_clean(&sky);
-
-	shader_clean(&mainShader);
-	shader_clean(&blitShader);
-	shader_clean(&skyShader);
 
 	font_clean(&font);
 	texture_clean(&bg);

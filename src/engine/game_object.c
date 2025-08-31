@@ -1,13 +1,12 @@
 #include "game_object.h"
 
-void game_object_init(GameObject* g) {
+void game_object_init(GameObject* g, RenderType type) {
 	component_transform_init(&g->transform);
 	texture_init(&g->texture);
-	//g->selected = 0;
+	g->type = type;
 }
 
 void game_object_draw(GameObject* g) {
-	// no shader for now, just assume main does it
 	texture_bind(&g->texture.id);
 	mesh_draw(&g->mesh);
 }
