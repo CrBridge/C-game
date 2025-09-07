@@ -81,6 +81,7 @@ void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
 		u32 normalIndex = finalNormalIndices[i] - 1;
 		u32 uvIndex = finalUvIndices[i] - 1;
 
+		// TODO! cant I just assign this directly?
 		memcpy(&v.position, array_get(&positions, positionIndex), sizeof(vec3));
 		memcpy(&v.normal, array_get(&normals, normalIndex), sizeof(vec3));
 		memcpy(&v.uv, array_get(&uvs, uvIndex), sizeof(vec2));
@@ -119,24 +120,69 @@ void mesh_load_from_obj(Mesh* mesh, const char* filePath) {
 	map_free(uniqueVertices);
 }
 
+static Vector3f mesh_calculate_terrain_normal(const fnl_state* state, int x, int y) {
+	float dx = fnlGetNoise2D(state, x + 1, y) - fnlGetNoise2D(state, x - 1, y);
+	float dy = fnlGetNoise2D(state, x, y + 1) - fnlGetNoise2D(state, x, y - 1);
+
+	vec3 n  = { -dx, 1, -dy };
+	vec3_norm(n, n);
+
+	//printf("normal value for y - %f\n", n[1]);
+
+	return (Vector3f) { n[0], n[1], n[2] };
+}
+
 // TODO! WIP
-void mesh_load_from_heightmap(Mesh* mesh) {
-	Vertex* meshVertices = NULL;
-	u32 vertexCount = 0;
-	u32* meshIndices = NULL;
-	u32 indexCount = 0;
+// For now we'll just load the noise here, but it should
+// really pass the noise state in to avoid coupling
+void mesh_load_from_heightmap(Mesh* mesh, const fnl_state* state, u16 width, u16 height) {
+	Array vertices = array_init(sizeof(Vertex));
+	Array indices = array_init(sizeof(u32));
 
-	fnl_state noise = fnlCreateState();
-	noise.noise_type = FNL_NOISE_OPENSIMPLEX2;
-
-	for (int x = 0; x < 128; x++) {
-		for (int y = 0; y < 128; y++) {
+	for (int x = 0; x < width; x++) {
+		for (int y = 0; y < height; y++) {
 			// get noise value for a vertex
-			float heightVal = fnlGetNoise2D(&noise, x, y);
+			// can try experimenting with skipping values (e.g. 2 * x) for
+			//	more sudden change in height
+			float height_val = fnlGetNoise2D(state, x, y);
+			Vertex vertex = { 0 };
+			vertex.position = (Vector3f) {
+				-width / 2.0f + width * x / (float)width,
+				height_val,
+				-height / 2.0f + height * y / (float)height
+				};
+			//vertex.normal = (Vector3f) { 0, 1, 0}; //TODO! actually calculate this
+			vertex.normal = mesh_calculate_terrain_normal(state, x, y);
+			//vertex.uv = (Vector2f) { x / (float)width, y / (float)height };
+			vertex.uv = (Vector2f) { x, y };
+			array_append(&vertices, &vertex);
 		}
 	}
 
-	mesh_load_from_memory(mesh, meshVertices, vertexCount, meshIndices, indexCount);
+	for (int x = 0; x < width - 1; x++) {
+		for (int y = 0; y < height - 1; y++) {
+			u32 i5 = x + width * y;
+			u32 i4 = x + width * (y + 1);
+			u32 i3 = (x + 1) + width * y;
+			u32 i2 = (x + 1) + width * y;
+			u32 i1 = x + width * (y + 1);
+			u32 i0 = (x + 1) + width * (y + 1);
+			array_append(&indices, &i0);
+			array_append(&indices, &i1);
+			array_append(&indices, &i2);
+			array_append(&indices, &i3);
+			array_append(&indices, &i4);
+			array_append(&indices, &i5);
+		}
+	}
+
+	mesh_load_from_memory(
+		mesh,
+		(Vertex*)vertices.data,
+		(u32)vertices.length,
+		(u32*)indices.data,
+		(u32)indices.length
+	);
 }
 
 void mesh_load_from_memory(Mesh* mesh, Vertex* vertices, u32 vertexCount, u32* indices, u32 indexCount) {

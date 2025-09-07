@@ -17,7 +17,7 @@ void texture_load_texture(Texture* t, const char* texturePath) {
 	// set sampler parameters, really should be configurable
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
 	int width, height, channels;
@@ -31,18 +31,25 @@ void texture_load_texture(Texture* t, const char* texturePath) {
 		texture_unbind();
 		return;
 	}
-	// TODO
-	// this currently loads in 4 channels no matter what - if I load a jpeg it would probably
-	// break. Might be worth actually using the channels value to grab the correct format
-	// TODO
-	// it has now broken. RGBA forces 4 channels even if there is only 3 causing segfaults.
-	// I need to vary the format used based on the number of channels that stb detected. should
-	// be an easy fix
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
+	GLenum format;
+	switch (channels) {
+		case 3:
+			format = GL_RGB;
+			break;
+		case 4:
+			format = GL_RGBA;
+			break;
+		default:
+			ERROR_EXIT("Attempted to load a texture that was not 3 or 4 channels. Look into this: %s", texturePath);
+			break;
+	}
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 
 	// not generating mipmaps for now, but might want to later
 	// if I do, I'll need to change the MIN_FILTER to MIPMAP_LINEAR or MIPMAP_NEAREST
-	//glGenerateMipmap(GL_TEXTURE_2D);
+	glGenerateMipmap(GL_TEXTURE_2D);
 
 	t->width = width;
 	t->height = height;

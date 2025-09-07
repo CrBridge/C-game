@@ -15,6 +15,7 @@ typedef enum Movement_Direction {
 	DOWN
 }Movement_Direction;
 
+// standard spectator-style camera
 typedef struct camera {
 	vec3 position;
 	vec3 front;
@@ -32,5 +33,17 @@ void camera_init(Camera* c);
 void camera_get_view(vec4* view, Camera* c);
 void camera_move_camera_position(Movement_Direction direction, Camera* c, f32 dt);
 void camera_move_camera_target(f32 dx, f32 dy, Camera* c);
+
+#include "game_object.h"
+
+// chase-style camera
+typedef struct chase_camera {
+	GameObject* target;
+	vec3 offset;
+	vec3 position;
+} ChaseCam;
+
+void camera_chase_init(ChaseCam* c, GameObject* g, vec3 offset);
+void camera_get_chase_view(vec4* view, ChaseCam* c);
 
 #endif

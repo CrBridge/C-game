@@ -4,6 +4,10 @@ void game_object_init(GameObject* g, RenderType type) {
 	component_transform_init(&g->transform);
 	texture_init(&g->texture);
 	g->type = type;
+
+	g->input = NULL;
+	g->update = NULL;
+	g->additional_data = NULL;
 }
 
 void game_object_draw(GameObject* g) {
@@ -19,4 +23,8 @@ void game_object_draw_debug(GameObject* g, GLenum mode) {
 void game_object_clean(GameObject* g) {
 	mesh_clean(&g->mesh);
 	texture_clean(&g->texture);
+
+	g->input = NULL;
+	g->update = NULL;
+	g->additional_data = NULL;
 }

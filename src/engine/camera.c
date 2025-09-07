@@ -107,3 +107,33 @@ void camera_move_camera_target(f32 dx, f32 dy, Camera* c) {
 
 	camera_update_vectors(c);
 }
+
+// tests
+
+void camera_chase_init(ChaseCam* c, GameObject* g, vec3 offset) {
+	c->target = g;
+	memcpy(c->offset, offset, sizeof(vec3));
+}
+
+void camera_get_chase_view(vec4* view, ChaseCam* c) {
+	mat4x4 rot;
+	mat4x4_identity(rot);
+	mat4x4_rotate_X(rot, rot, degree_to_rad(c->target->transform.rotation[0]));
+	mat4x4_rotate_Y(rot, rot, degree_to_rad(c->target->transform.rotation[1]));
+	mat4x4_rotate_Z(rot, rot, degree_to_rad(c->target->transform.rotation[2]));
+
+	vec4 world_offset;
+	vec4 local = { c->offset[0], c->offset[1], c->offset[2], 0.0 };
+	mat4x4_mul_vec4(world_offset, rot, local);
+
+	vec3_add(c->position, c->target->transform.position, world_offset);
+
+	vec4 forward = { 0, 0, -1, 0 };
+	vec4 world_forward;
+	mat4x4_mul_vec4(world_forward, rot, forward);
+
+	vec3 look_at;
+	vec3_add(look_at, c->target->transform.position, world_forward);
+
+	mat4x4_look_at(view, c->position, look_at, (vec3) { 0, 1, 0 });
+}

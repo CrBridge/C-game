@@ -27,6 +27,7 @@ typedef struct mesh {
 } Mesh;
 
 void mesh_load_from_obj(Mesh* mesh, const char* filePath);
+void mesh_load_from_heightmap(Mesh* mesh, const fnl_state* noise, u16 width, u16 height);
 void mesh_load_from_memory(Mesh* mesh, Vertex* vertices, u32 vertexCount, u32* indices, u32 indexCount);
 void mesh_draw(Mesh* mesh);
 void mesh_draw_debug(Mesh* mesh, GLenum mode);

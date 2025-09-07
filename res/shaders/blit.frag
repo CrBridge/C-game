@@ -66,14 +66,18 @@ void main()
 { 
 	out_color = texture(texture_id, frag_uv);
 
-	// sharpening
-	//frag_color = sharpen(texture_id, frag_uv, vec2(960,544));
+	// sharpening, would really want to pass in resolution as a uniform instead
+	//vec4 sharpened = sharpen(texture_id, frag_uv, vec2(960,544));
+	//out_color = sharpened;
 
-	// messing about with a film grain effect 
+	// messing about with a film grain effect
     //vec4 color = texture(texture_id, frag_uv);
 	//float grain = hash12(frag_uv + float(frame));
 	//grain = (grain * 2 - 1) * 0.2;
-	//frag_color = color + color * grain;
+	//vec4 grain_only = color + color * grain;
+	//out_color = grain_only;
+	//vec4 grain_sharpen = sharpened + sharpened * grain;
+	//out_color = grain_sharpen;
 
 	// trying dithering, needs some more tinkering
 	//int x = int(frag_uv.x * 960);

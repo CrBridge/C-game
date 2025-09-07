@@ -6,7 +6,6 @@
 #include "engine/rendering/sprite_batch.h"
 #include "engine/rendering/renderer.h"
 
-#include "engine/rendering/shader.h"
 #include "engine/rendering/texture.h"
 #include "engine/rendering/mesh.h"
 #include "engine/rendering/font.h"
@@ -17,14 +16,16 @@
 
 #include "engine/input/input.h"
 
-#include "engine/components/transform_component.h"
-#include "engine/components/skybox_component.h"
+#include "engine/components/transform.h"
+#include "engine/components/skybox.h"
 
 #include "engine/game_object.h"
 #include "engine/camera.h"
 
 #include "engine/data/array.h"
 #include "engine/data/map.h"
+
+#include "engine/game_logic/player.h"
 
 static void poll_input(int* shouldQuit)
 {
@@ -44,6 +45,12 @@ static void poll_input(int* shouldQuit)
 			break;
 		}
 		// TODO: support resizing?
+		//  would need to either change how i get window_width/height
+		//	or update that on resize. I think thats about it though,
+		// renderer only gets the values via window_get_width/height
+		// so as long as that handles it we should be good
+		// suppose I'd also want to reinit the projection as it uses
+		// aspect ratio...
 	}
 }
 
@@ -62,16 +69,6 @@ int main(int argc, char** argv)
 	f32 dt = 0.0f;
 	f32 lastFrame = 0.0f;
 	u32 currentFrame = 0;
-
-	// ===================== Matrix Init ===================== //
-
-	mat4x4 projection;
-	mat4x4_perspective(projection, degree_to_rad(45.0f), window_get_aspect(), 0.1f, 100.0f);
-
-	mat4x4 view;
-	Camera camera = {0};
-	camera_init(&camera);
-	camera.position[2] += 3.0f;
 
 	// initalising positions for spritebatch drawing
 	Rectangle srcTest = {
@@ -95,26 +92,36 @@ int main(int argc, char** argv)
 
 	// ============= Mesh, Shader & Texture Init ============= //
 
+	// TODO! support some kind of global resource handling so I don't load duplicates
+
 	// game object array
 	Array game_objects = array_init(sizeof(GameObject));
 
-	//donut
-	GameObject donut;
-	game_object_init(&donut, RENDER_DEFAULT);
-	mesh_load_from_obj(&donut.mesh, "./res/models/donut.obj");
-	texture_load_texture(&donut.texture, "./res/textures/donut_diffuse.png");
-	donut.transform.rotation[0] = 180.0f;
-	donut.transform.rotation[2] = 45.0f;
-	array_append(&game_objects, &donut);
+	// tracking this for collision, how can I use this in an objects update function though?
+	fnl_state noise = fnlCreateState();
+	noise.noise_type = FNL_NOISE_OPENSIMPLEX2;
+	noise.frequency = 0.1f;
+	//noise.octaves = 10;
 
-	GameObject ground;
-	game_object_init(&ground, RENDER_SHELL);
-	mesh_load_quad(&ground.mesh);
-	texture_load_from_color(&ground.texture, (u8[4]) { 50, 130, 10, 255 });
-	ground.transform.rotation[0] = 270.0f;
-	ground.transform.scale = 20.0f;
-	ground.transform.position[1] = -1.0f;
-	array_append(&game_objects, &ground);
+	{
+		// terrain
+		GameObject terrain;
+		game_object_init(&terrain, RENDER_TERRAIN);
+		mesh_load_from_heightmap(&terrain.mesh, &noise, 128, 128);
+		//texture_load_from_color(&terrain.texture, (u8[4]) { 255, 255, 255, 255 });
+		texture_load_texture(&terrain.texture, "./res/textures/terrain_dither.png");
+		array_append(&game_objects, &terrain);
+
+		// player
+		GameObject ship;
+		game_object_init(&ship, RENDER_DEFAULT);
+		mesh_load_cube(&ship.mesh);
+		texture_load_texture(&ship.texture, "./res/textures/box.png");
+		ship.transform.position[1] += 5.0f;
+		ship.input = player_input;
+		ship.update = player_update;
+		array_append(&game_objects, &ship);
+	}
 
 	// skybox
 	const char* skybox[6] = {
@@ -137,6 +144,13 @@ int main(int argc, char** argv)
 	texture_init(&bg);
 	texture_load_from_color(&bg, (u8[4]) { 255, 255, 255, 255 });
 
+	// ===================== Matrix Init ===================== //
+	mat4x4 projection;
+	mat4x4_perspective(projection, degree_to_rad(45.0f), window_get_aspect(), 0.1f, 100.0f);
+
+	mat4x4 view;
+	ChaseCam camera;
+	camera_chase_init(&camera, &((GameObject*)game_objects.data)[1], (vec3) { 0.f, 0.f, 5.f });
 	// ======================================================= //
 	while (!shouldQuit) {
 		// delta time calculations
@@ -148,39 +162,37 @@ int main(int argc, char** argv)
 		// ================ Input & Event Polling ================ //
 		poll_input(&shouldQuit);
 		input_update_current_keyboard_state();
-		float x, y;
-		SDL_GetRelativeMouseState(&x, &y);
-		camera_move_camera_target(x, y, &camera);
 
-		if (input_is_key_down(SDL_SCANCODE_W)) {
-			camera_move_camera_position(FORWARD, &camera, dt);
+		for (int i = 0; i < game_objects.length; i++) {
+			GameObject* g = &((GameObject*)game_objects.data)[i];
+			if (g->input) g->input(g, dt);
 		}
-		if (input_is_key_down(SDL_SCANCODE_A)) {
-			camera_move_camera_position(LEFT, &camera, dt);
-		}
-		if (input_is_key_down(SDL_SCANCODE_S)) {
-			camera_move_camera_position(BACKWARD, &camera, dt);
-		}
-		if (input_is_key_down(SDL_SCANCODE_D)) {
-			camera_move_camera_position(RIGHT, &camera, dt);
-		}
-		if (input_is_key_down(SDL_SCANCODE_SPACE)) {
-			camera_move_camera_position(UP, &camera, dt);
-		}
-		if (input_is_key_down(SDL_SCANCODE_LSHIFT)) {
-			camera_move_camera_position(DOWN, &camera, dt);
-		}
+
 		input_update_previous_keyboard_state();
 		// ======================================================= //
 
-		((GameObject*)game_objects.data)[0].transform.rotation[1] += dt * 20.0f;
+		for (int i = 0; i < game_objects.length; i++) {
+			GameObject* g = &((GameObject*)game_objects.data)[i];
+			if (g->update) g->update(g, dt);
+		}
 
-		camera_get_view(view, &camera);
+		// Lots of ways to go about that, right now I'd lean towards implementing an event system,
+		// I suppose this would work by having a globaly accessible event queue
+		// would this even solve my problem?
+
+		// TODO! example of checking for terrain collision. This sucks, objects need
+		//	a better way of interacting with other objects
+		//GameObject g = ((GameObject*)game_objects.data)[1];
+		//float height_of_collision = fnlGetNoise2D(&noise, g.transform.position[0], g.transform.position[2]);
+		//if (g.transform.position[1] <= height_of_collision) {
+		//	printf("Collision Detected!\n");
+		//}
+
+		camera_get_chase_view(view, &camera);
 
 		renderer_begin_frame(&projection, &view, totalS, currentFrame);
 
 		renderer_draw_skybox(&sky);
-
 		for (int i = 0; i < game_objects.length; i++) {
 			GameObject* g = (GameObject*)game_objects.data;
 			renderer_draw_game_object(&g[i]);

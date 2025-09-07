@@ -22,7 +22,9 @@ static Renderer render_state = { 0 };
 
 // registering shaders
 shader main_shader;
+shader debug_shader;
 shader shell_shader;
+shader terrain_shader;
 shader blit_shader;
 shader sky_shader;
 
@@ -47,7 +49,9 @@ void renderer_init(int width, int height) {
 
 	// NOTE! shaders that are intended for use with spritebatch will be defined there instead
 	main_shader = shader_load("./res/shaders/default.vert", "./res/shaders/default.frag");
+	debug_shader = shader_load("./res/shaders/debug.vert", "./res/shaders/debug.frag");
 	shell_shader = shader_load("./res/shaders/shell.vert", "./res/shaders/shell.frag");
+	terrain_shader = shader_load("./res/shaders/terrain.vert", "./res/shaders/terrain.frag");
 	blit_shader = shader_load("./res/shaders/blit.vert", "./res/shaders/blit.frag");
 	sky_shader = shader_load("./res/shaders/sky.vert", "./res/shaders/sky.frag");
 
@@ -75,8 +79,14 @@ void renderer_use_shader(RenderType shader_type) {
 			case RENDER_DEFAULT:
 				render_state.bound_shader = &main_shader;
 				break;
+			case RENDER_DEBUG:
+				render_state.bound_shader = &debug_shader;
+				break;
 			case RENDER_SHELL:
 				render_state.bound_shader = &shell_shader;
+				break;
+			case RENDER_TERRAIN:
+				render_state.bound_shader = &terrain_shader;
 				break;
 			case RENDER_SKY:
 				render_state.bound_shader = &sky_shader;
@@ -111,6 +121,17 @@ void renderer_draw_game_object(GameObject* g) {
 			shader_set_mat4(render_state.bound_shader, "model", &model);
 			game_object_draw(g);
 			break;
+		// TODO! this GL_LINES isn't really what I want, proper wireframe showing triangles
+		//	would need a call to glPolygonMode with GL_LINE, but enabling and disabling it
+		//	for every draw call using it seems wasteful. I could set it in the renderer_use_shader,
+		//	and disable it once it has switched off of debug, but that would cause issues when going
+		//	from the debug shader to spritebatch calls because spritebatch isn't really hooked up
+		//	here at all, so thats something I'll have to work on to fix this
+		case RENDER_DEBUG:
+			component_transform_calculate_model_matrix(model, &g->transform);
+			shader_set_mat4(render_state.bound_shader, "model", &model);
+			game_object_draw_debug(g, GL_LINES);
+			break;
 		// hardcoding shells and thresholds, not sure how else to go about it :/
 		// supposed the solution would be to store optional niche data with union
 		case RENDER_SHELL:
@@ -123,6 +144,11 @@ void renderer_draw_game_object(GameObject* g) {
 				g->transform.position[1] += 0.025f;
 			}
 			g->transform.position[1] = y_start;
+			break;
+		case RENDER_TERRAIN:
+			component_transform_calculate_model_matrix(model, &g->transform);
+			shader_set_mat4(render_state.bound_shader, "model", &model);
+			game_object_draw(g);
 			break;
 		default:
 			ERROR_EXIT("Renderer failed to draw a game object. The object either had an undefined \
@@ -158,7 +184,6 @@ void renderer_end_frame() {
 }
 
 void renderer_clean() {
-	// TODO! need to clean the shaders now - same thing in sprite batch
 	shader_clean(&main_shader);
 	shader_clean(&shell_shader);
 	shader_clean(&sky_shader);

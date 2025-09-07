@@ -30,11 +30,6 @@ i32 window_init_window(u16 width, u16 height, char* name) {
 
 	// enable double buffering
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-	
-	//TODO! now that I use a frame buffer, I'm not sure specifying depth buffer
-	//	size is doing anything for me here, since I attach a depth-stencil buffer
-	//	to the rbo, the above could probably be removed
 
 	appState.pWindow = SDL_CreateWindow(
 		name,
@@ -116,6 +111,8 @@ f32 window_get_aspect(void) {
 	return (f32)appState.width / (f32)appState.height;
 }
 
+// TODO: instead SDL should have some form of getWindowSize type function,
+//	use that instead, will make things easier if I want a resizable window
 u16 window_get_width(void) {
 	return appState.width;
 }

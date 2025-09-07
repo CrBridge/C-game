@@ -5,7 +5,7 @@
 #include "../types.h"
 
 #include "../game_object.h"
-#include "../components/skybox_component.h"
+#include "../components/skybox.h"
 
 #include "fbo.h"
 #include "rbo.h"
