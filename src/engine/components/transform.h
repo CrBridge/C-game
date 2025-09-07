@@ -11,7 +11,8 @@
 
 typedef struct transform {
 	vec3 position;
-	vec3 rotation;
+	mat4x4 rotation;
+	//quat rotation;
 	f32 scale;
 } Transform;
 

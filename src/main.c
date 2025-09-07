@@ -143,6 +143,9 @@ int main(int argc, char** argv)
 	Texture bg;
 	texture_init(&bg);
 	texture_load_from_color(&bg, (u8[4]) { 255, 255, 255, 255 });
+	Texture overlay;
+	texture_init(&overlay);
+	texture_load_texture(&overlay, "./res/textures/overlay.png");
 
 	// ===================== Matrix Init ===================== //
 	mat4x4 projection;
@@ -200,6 +203,7 @@ int main(int argc, char** argv)
 
 		// UI Stage
 		spritebatch_begin();
+		spritebatch_draw_vec_dst((Vector2f){0,0}, &overlay, (Vector3f){1,1,1});
 		spritebatch_draw(dstTest, srcTest, &bg, (Vector3f){0, 0, 1.0});
 		spritebatch_draw_string(vecTest, &font, "HELLO WORLD!", 1.0f, (Vector3f){1,1,1});
 		spritebatch_end();

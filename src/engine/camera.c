@@ -116,24 +116,24 @@ void camera_chase_init(ChaseCam* c, GameObject* g, vec3 offset) {
 }
 
 void camera_get_chase_view(vec4* view, ChaseCam* c) {
-	mat4x4 rot;
-	mat4x4_identity(rot);
-	mat4x4_rotate_X(rot, rot, degree_to_rad(c->target->transform.rotation[0]));
-	mat4x4_rotate_Y(rot, rot, degree_to_rad(c->target->transform.rotation[1]));
-	mat4x4_rotate_Z(rot, rot, degree_to_rad(c->target->transform.rotation[2]));
-
 	vec4 world_offset;
 	vec4 local = { c->offset[0], c->offset[1], c->offset[2], 0.0 };
-	mat4x4_mul_vec4(world_offset, rot, local);
+	mat4x4_mul_vec4(world_offset, c->target->transform.rotation, local);
 
 	vec3_add(c->position, c->target->transform.position, world_offset);
 
 	vec4 forward = { 0, 0, -1, 0 };
 	vec4 world_forward;
-	mat4x4_mul_vec4(world_forward, rot, forward);
+	mat4x4_mul_vec4(world_forward, c->target->transform.rotation, forward);
 
 	vec3 look_at;
 	vec3_add(look_at, c->target->transform.position, world_forward);
 
-	mat4x4_look_at(view, c->position, look_at, (vec3) { 0, 1, 0 });
+	//mat4x4_look_at(view, c->position, look_at, (vec3) { 0, 1, 0 }); // if I want a static 'up'
+
+	// constuct a new up vector angle is affected by roll
+	vec4 up = { 0 , 1, 0, 0 };
+	vec4 world_up;
+	mat4x4_mul_vec4(world_up, c->target->transform.rotation, up);
+	mat4x4_look_at(view, c->position, look_at, (vec3){ world_up[0], world_up[1], world_up[2] });
 }

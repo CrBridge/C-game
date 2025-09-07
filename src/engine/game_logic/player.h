@@ -14,7 +14,10 @@
 
 // this will be stored in a GameObject using a void pointer, the update function will cast that
 // void pointer to this info struct to do things
-typedef struct player_info {} PlayerInfo;
+typedef struct player_info {
+	f32 yaw;
+	f32 pitch;
+} PlayerInfo;
 
 // signatures for the functions that the player GameObject will point to
 
