@@ -7,6 +7,7 @@ void game_object_init(GameObject* g, RenderType type) {
 
 	g->input = NULL;
 	g->update = NULL;
+	g->draw	= NULL;
 	g->additional_data = NULL;
 }
 

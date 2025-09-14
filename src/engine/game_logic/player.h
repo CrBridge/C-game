@@ -14,6 +14,7 @@
 
 // this will be stored in a GameObject using a void pointer, the update function will cast that
 // void pointer to this info struct to do things
+// whats this storing? Pitch/Yaw/Roll? Thrust?
 typedef struct player_info {
 	f32 yaw;
 	f32 pitch;
@@ -25,5 +26,11 @@ PlayerInfo player_info_init();
 
 void player_input(GameObject* g, f32 dt);
 void player_update(GameObject* g, f32 dt);
+void player_draw(GameObject* g);
+
+// cheat function to make the players
+// position globablly accessible, will remove
+// once entities can more easily interact
+Vector3f player_get_position();
 
 #endif

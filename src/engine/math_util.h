@@ -4,6 +4,7 @@
 #include "types.h"
 
 #define M_PI 3.1415926535f
+#define M_TAU 6.2831853071f
 
 #define max(A, B) ((A) > (B) ? (A) : (B))
 #define min(A, B) ((A) < (B) ? (A) : (B))

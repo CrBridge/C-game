@@ -89,5 +89,5 @@ void main()
 	//bayer.z = get_bayer8(x, y);
 	//
 	//vec4 color = texture(texture_id, frag_uv);
-	//frag_color = color + 0.1 * bayer[2];
+	//out_color = color + 0.1 * bayer[0];
 }

@@ -115,6 +115,12 @@ void camera_chase_init(ChaseCam* c, GameObject* g, vec3 offset) {
 	memcpy(c->offset, offset, sizeof(vec3));
 }
 
+
+// TODO! camera feels a little too static right now, would be nice if it
+//	lags behind the current rotation (and position when thrust is a thing)
+//	a little more, would have to look up how thats usually done. Might be
+//	that I use an offset e.g. of 10 frames, but would I then have to store
+//	10 rotation matrices?
 void camera_get_chase_view(vec4* view, ChaseCam* c) {
 	vec4 world_offset;
 	vec4 local = { c->offset[0], c->offset[1], c->offset[2], 0.0 };

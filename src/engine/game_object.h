@@ -20,6 +20,7 @@ typedef enum {
 
 typedef struct gameObject GameObject;
 
+typedef void (*game_object_draw_func)(GameObject* g);
 typedef void (*game_object_update_func)(GameObject* g, f32 dt);
 typedef void (*game_object_input_func)(GameObject* g, f32 dt);
 
@@ -29,6 +30,11 @@ typedef struct gameObject {
 	Texture texture;
 	RenderType type;
 
+	// function pointers. If I end up wanting more, it might be worth
+	// making a vtable, pretty much just storing all the function pointers
+	// in a struct that I can then put here
+
+	game_object_draw_func draw;
 	game_object_update_func update;
 	game_object_input_func input;
 

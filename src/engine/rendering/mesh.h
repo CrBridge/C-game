@@ -6,6 +6,7 @@
 #include "../util.h"
 #include "../data/array.h"
 #include "../data/map.h"
+#include "../math_util.h"
 
 #include "vertex.h"
 #include "vbo.h"
@@ -16,7 +17,6 @@
 #include <glad/glad.h>
 #include <stdio.h>
 
-//
 #include <FastNoiseLite.h>
 
 typedef struct mesh {
@@ -36,7 +36,9 @@ void mesh_clean(Mesh* mesh);
 // some helpers for generating meshes without the need of a file or manually specifying vertices
 // may have an enum for these shapes so that any larger struct init function (e.g. an init_game_object)
 // can easily access them using it
+
 void mesh_load_cube(Mesh* mesh);
+void mesh_load_cube_custom(Mesh* mesh, u8 width, u8 height, u8 depth);
 void mesh_load_quad(Mesh* mesh);
 void mesh_load_screen_quad(Mesh* mesh);
 void mesh_load_sky_cube(Mesh* mesh);

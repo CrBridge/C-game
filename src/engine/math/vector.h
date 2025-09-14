@@ -17,4 +17,19 @@ typedef union {
 	f32 arr[2];
 } Vector2f;
 
+// adds 2 vector3s by their individual components 
+Vector3f vector3f_add_vector3f(Vector3f a, Vector3f b);
+// adds a value to a vector3 on all of its components 
+Vector3f vector3f_add_component(Vector3f a, f32 b);
+// multiplies 2 vector3s by their individual components
+Vector3f vector3f_mul_vector3f(Vector3f a, Vector3f b);
+// multiplies the components of a vector3 by a value
+Vector3f vector3f_mul_component(Vector3f a, f32 b);
+// divides 2 vector3s by their individual components 
+Vector3f vector3f_div_vector3f(Vector3f a, Vector3f b);
+// divides a vector3 by a value on all of its components 
+Vector3f vector3f_div_component(Vector3f a, f32 b);
+// divides a vector2 by a value on all of its components 
+Vector2f vector2f_div_component(Vector2f a, f32 b);
+
 #endif

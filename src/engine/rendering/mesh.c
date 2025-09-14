@@ -132,9 +132,6 @@ static Vector3f mesh_calculate_terrain_normal(const fnl_state* state, int x, int
 	return (Vector3f) { n[0], n[1], n[2] };
 }
 
-// TODO! WIP
-// For now we'll just load the noise here, but it should
-// really pass the noise state in to avoid coupling
 void mesh_load_from_heightmap(Mesh* mesh, const fnl_state* state, u16 width, u16 height) {
 	Array vertices = array_init(sizeof(Vertex));
 	Array indices = array_init(sizeof(u32));
@@ -151,9 +148,7 @@ void mesh_load_from_heightmap(Mesh* mesh, const fnl_state* state, u16 width, u16
 				height_val,
 				-height / 2.0f + height * y / (float)height
 				};
-			//vertex.normal = (Vector3f) { 0, 1, 0}; //TODO! actually calculate this
 			vertex.normal = mesh_calculate_terrain_normal(state, x, y);
-			//vertex.uv = (Vector2f) { x / (float)width, y / (float)height };
 			vertex.uv = (Vector2f) { x, y };
 			array_append(&vertices, &vertex);
 		}
@@ -199,6 +194,10 @@ void mesh_load_from_memory(Mesh* mesh, Vertex* vertices, u32 vertexCount, u32* i
 	ebo_add_data(&mesh->ebo, indices, indexCount);
 
 	// static vertex declaration, it being configurable would be nice
+	// I guess the easiest solution would be a switch case with an enum
+	// such as VERTEX_POSITION, POSITION_NORMAL, POSITION_COLOR etc.
+	// maybe the better solution there would be to remove the middleman and simply have
+	// the enum declare alignment e.g. VERTEX_4, VERTEX_4_4_2 etc.
 	vao_setup_vbo_attrib(&mesh->vbo, 0, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, position));
 	vao_setup_vbo_attrib(&mesh->vbo, 1, 3, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, normal));
 	vao_setup_vbo_attrib(&mesh->vbo, 2, 2, GL_FLOAT, sizeof(Vertex), (void*)offsetof(Vertex, uv));
@@ -260,6 +259,51 @@ void mesh_load_cube(Mesh* mesh) {
 		{{ 0.5, -0.5, -0.5}, {0, -1, 0}, {1, 0}},
 		{{ 0.5, -0.5,  0.5}, {0, -1, 0}, {1, 1}},
 		{{-0.5, -0.5,  0.5}, {0, -1, 0}, {0, 1}},
+	};
+
+	u32 indices[] = {
+		 0,  1,  2,  2,  3,  0,
+		 4,  5,  6,  6,  7,  4,
+		 8,  9, 10, 10, 11,  8,
+		12, 13, 14, 14, 15, 12,
+		16, 17, 18, 18, 19, 16,
+		20, 21, 22, 22, 23, 20
+	};
+
+	mesh_load_from_memory(mesh, vertices, sizeof(vertices) / sizeof(vertices[0]), indices, sizeof(indices) / sizeof(indices[0]));
+}
+
+void mesh_load_cube_custom(Mesh* mesh, u8 width, u8 height, u8 depth) {
+	Vertex vertices[] = {
+		{{-0.5 * width, -0.5 * height,  0.5 * depth}, {0, 0, 1}, {0, 0}},
+		{{ 0.5 * width, -0.5 * height,  0.5 * depth}, {0, 0, 1}, {1, 0}},
+		{{ 0.5 * width,  0.5 * height,  0.5 * depth}, {0, 0, 1}, {1, 1}},
+		{{-0.5 * width,  0.5 * height,  0.5 * depth}, {0, 0, 1}, {0, 1}},
+
+		{{ 0.5 * width, -0.5 * height, -0.5 * depth}, {0, 0, -1}, {0, 0}},
+		{{-0.5 * width, -0.5 * height, -0.5 * depth}, {0, 0, -1}, {1, 0}},
+		{{-0.5 * width,  0.5 * height, -0.5 * depth}, {0, 0, -1}, {1, 1}},
+		{{ 0.5 * width,  0.5 * height, -0.5 * depth}, {0, 0, -1}, {0, 1}},
+
+		{{-0.5 * width, -0.5 * height, -0.5 * depth}, {-1, 0, 0}, {0, 0}},
+		{{-0.5 * width, -0.5 * height,  0.5 * depth}, {-1, 0, 0}, {1, 0}},
+		{{-0.5 * width,  0.5 * height,  0.5 * depth}, {-1, 0, 0}, {1, 1}},
+		{{-0.5 * width,  0.5 * height, -0.5 * depth}, {-1, 0, 0}, {0, 1}},
+
+		{{ 0.5 * width, -0.5 * height,  0.5 * depth}, {1, 0, 0}, {0, 0}},
+		{{ 0.5 * width, -0.5 * height, -0.5 * depth}, {1, 0, 0}, {1, 0}},
+		{{ 0.5 * width,  0.5 * height, -0.5 * depth}, {1, 0, 0}, {1, 1}},
+		{{ 0.5 * width,  0.5 * height,  0.5 * depth}, {1, 0, 0}, {0, 1}},
+
+		{{-0.5 * width,  0.5 * height,  0.5 * depth}, {0, 1, 0}, {0, 0}},
+		{{ 0.5 * width,  0.5 * height,  0.5 * depth}, {0, 1, 0}, {1, 0}},
+		{{ 0.5 * width,  0.5 * height, -0.5 * depth}, {0, 1, 0}, {1, 1}},
+		{{-0.5 * width,  0.5 * height, -0.5 * depth}, {0, 1, 0}, {0, 1}},
+
+		{{-0.5 * width, -0.5 * height, -0.5 * depth}, {0, -1, 0}, {0, 0}},
+		{{ 0.5 * width, -0.5 * height, -0.5 * depth}, {0, -1, 0}, {1, 0}},
+		{{ 0.5 * width, -0.5 * height,  0.5 * depth}, {0, -1, 0}, {1, 1}},
+		{{-0.5 * width, -0.5 * height,  0.5 * depth}, {0, -1, 0}, {0, 1}},
 	};
 
 	u32 indices[] = {

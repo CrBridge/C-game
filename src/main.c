@@ -27,6 +27,9 @@
 
 #include "engine/game_logic/player.h"
 
+#include "engine/math/rng.h"
+#include "engine/math/procgen/bsp.h"
+
 static void poll_input(int* shouldQuit)
 {
 	SDL_Event event;
@@ -88,7 +91,9 @@ int main(int argc, char** argv)
 		.y = 0
 	};
 
-	// ======================================================= //
+	// ====================== RNG Init ================== //
+
+	rng_set_seed(100);
 
 	// ============= Mesh, Shader & Texture Init ============= //
 
@@ -108,16 +113,17 @@ int main(int argc, char** argv)
 		GameObject terrain;
 		game_object_init(&terrain, RENDER_TERRAIN);
 		mesh_load_from_heightmap(&terrain.mesh, &noise, 128, 128);
-		//texture_load_from_color(&terrain.texture, (u8[4]) { 255, 255, 255, 255 });
 		texture_load_texture(&terrain.texture, "./res/textures/terrain_dither.png");
+		terrain.transform.scale = 1.0f;
 		array_append(&game_objects, &terrain);
 
 		// player
 		GameObject ship;
 		game_object_init(&ship, RENDER_DEFAULT);
-		mesh_load_cube(&ship.mesh);
-		texture_load_texture(&ship.texture, "./res/textures/box.png");
+		mesh_load_from_obj(&ship.mesh, "./res/models/test_ship.obj");
+		texture_load_from_color(&ship.texture, (u8[4]){80, 10, 25, 255});
 		ship.transform.position[1] += 5.0f;
+		ship.transform.scale = 0.3f;
 		ship.input = player_input;
 		ship.update = player_update;
 		array_append(&game_objects, &ship);
@@ -149,11 +155,13 @@ int main(int argc, char** argv)
 
 	// ===================== Matrix Init ===================== //
 	mat4x4 projection;
+	// at 10k rn to test object positions, change back to a lower value later
 	mat4x4_perspective(projection, degree_to_rad(45.0f), window_get_aspect(), 0.1f, 100.0f);
 
 	mat4x4 view;
 	ChaseCam camera;
-	camera_chase_init(&camera, &((GameObject*)game_objects.data)[1], (vec3) { 0.f, 0.f, 5.f });
+	//camera_chase_init(&camera, &((GameObject*)game_objects.data)[1], (vec3) { 0.f, 0.f, 3.5f });
+	camera_chase_init(&camera, &((GameObject*)game_objects.data)[1], (vec3) { 0.f, 1.f, 4.5f });
 	// ======================================================= //
 	while (!shouldQuit) {
 		// delta time calculations
@@ -179,26 +187,15 @@ int main(int argc, char** argv)
 			if (g->update) g->update(g, dt);
 		}
 
-		// Lots of ways to go about that, right now I'd lean towards implementing an event system,
-		// I suppose this would work by having a globaly accessible event queue
-		// would this even solve my problem?
-
-		// TODO! example of checking for terrain collision. This sucks, objects need
-		//	a better way of interacting with other objects
-		//GameObject g = ((GameObject*)game_objects.data)[1];
-		//float height_of_collision = fnlGetNoise2D(&noise, g.transform.position[0], g.transform.position[2]);
-		//if (g.transform.position[1] <= height_of_collision) {
-		//	printf("Collision Detected!\n");
-		//}
-
 		camera_get_chase_view(view, &camera);
 
 		renderer_begin_frame(&projection, &view, totalS, currentFrame);
 
 		renderer_draw_skybox(&sky);
 		for (int i = 0; i < game_objects.length; i++) {
-			GameObject* g = (GameObject*)game_objects.data;
-			renderer_draw_game_object(&g[i]);
+			GameObject* g = &((GameObject*)game_objects.data)[i];
+			if (g->draw) g->draw(g);
+			else renderer_draw_game_object(g);
 		}
 
 		// UI Stage
