@@ -7,30 +7,25 @@
 #include "../input/input.h"
 
 #include <linmath.h>
+#include <FastNoiseLite.h>
 
-// the gameobject could store the player specific information with a void pointer. That way
-// we can have unique data for every single game object. For player another approach would be
-// to store some static info here, but at that point why am I bothering with GameObject?
-
-// this will be stored in a GameObject using a void pointer, the update function will cast that
-// void pointer to this info struct to do things
-// whats this storing? Pitch/Yaw/Roll? Thrust?
 typedef struct player_info {
-	f32 yaw;
-	f32 pitch;
+	f32 thrust;
+	fnl_state* noise;
 } PlayerInfo;
 
 // signatures for the functions that the player GameObject will point to
 
-PlayerInfo player_info_init();
+void player_info_init(GameObject* g, fnl_state* n);
 
 void player_input(GameObject* g, f32 dt);
 void player_update(GameObject* g, f32 dt);
 void player_draw(GameObject* g);
 
-// cheat function to make the players
-// position globablly accessible, will remove
-// once entities can more easily interact
+// cheat functions to easily get player info
+// used in collisions, UI etc.
 Vector3f player_get_position();
+f32 player_get_thrust();
+int player_has_player_crashed();
 
 #endif

@@ -64,18 +64,18 @@ vec4 sharpen(in sampler2D tex, in vec2 coords, in vec2 renderSize) {
 
 void main()
 { 
-	out_color = texture(texture_id, frag_uv);
+	//out_color = texture(texture_id, frag_uv);
 
 	// sharpening, would really want to pass in resolution as a uniform instead
 	//vec4 sharpened = sharpen(texture_id, frag_uv, vec2(960,544));
 	//out_color = sharpened;
 
 	// messing about with a film grain effect
-    //vec4 color = texture(texture_id, frag_uv);
-	//float grain = hash12(frag_uv + float(frame));
-	//grain = (grain * 2 - 1) * 0.2;
-	//vec4 grain_only = color + color * grain;
-	//out_color = grain_only;
+    vec4 color = texture(texture_id, frag_uv);
+	float grain = hash12(frag_uv + float(frame));
+	grain = (grain * 2 - 1) * 0.2;
+	vec4 grain_only = color + color * grain;
+	out_color = grain_only;
 	//vec4 grain_sharpen = sharpened + sharpened * grain;
 	//out_color = grain_sharpen;
 

@@ -5,7 +5,7 @@
 //	pretty much require me to read in some kind of metadata file
 //	to calculate the sources which is a bit effort
 
-Font font_init(const char* charset, Texture* f, int char_width, int char_height) {
+Font font_init(const char* charset, Texture f, int char_width, int char_height) {
 	Font font = {0};
 
 	font.char_sources = malloc(sizeof(Rectangle) * strlen(charset));
@@ -13,7 +13,7 @@ Font font_init(const char* charset, Texture* f, int char_width, int char_height)
 	font.char_width = char_width;
 	font.char_height = char_height;
 
-	int columns = f->width / char_width;
+	int columns = f.width / char_width;
 
 	memset(font.char_index, -1, sizeof(font.char_index));
 
@@ -50,7 +50,7 @@ Rectangle font_get_src(char c, Font* f) {
 void font_clean(Font* f) {
 	free(f->char_index);
 	free(f->char_sources);
-	texture_clean(f->fontset);
+	texture_clean(&f->fontset);
 
 	f->char_sources = NULL;
 }

@@ -1,9 +1,10 @@
 #include "game_object.h"
 
-void game_object_init(GameObject* g, RenderType type) {
+void game_object_init(GameObject* g, RenderType r, ObjectType o) {
 	component_transform_init(&g->transform);
 	texture_init(&g->texture);
-	g->type = type;
+	g->type = r;
+	g->obj_type = o;
 
 	g->input = NULL;
 	g->update = NULL;

@@ -38,12 +38,13 @@ void camera_move_camera_target(f32 dx, f32 dy, Camera* c);
 
 // chase-style camera
 typedef struct chase_camera {
-	GameObject* target;
+	Transform* target;
 	vec3 offset;
 	vec3 position;
 } ChaseCam;
 
-void camera_chase_init(ChaseCam* c, GameObject* g, vec3 offset);
-void camera_get_chase_view(vec4* view, ChaseCam* c);
+void camera_chase_init(Transform* t, vec3 offset);
+void camera_get_chase_view(vec4* view);
+void camera_change_target(Transform* t);
 
 #endif

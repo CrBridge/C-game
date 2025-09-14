@@ -138,9 +138,6 @@ void mesh_load_from_heightmap(Mesh* mesh, const fnl_state* state, u16 width, u16
 
 	for (int x = 0; x < width; x++) {
 		for (int y = 0; y < height; y++) {
-			// get noise value for a vertex
-			// can try experimenting with skipping values (e.g. 2 * x) for
-			//	more sudden change in height
 			float height_val = fnlGetNoise2D(state, x, y);
 			Vertex vertex = { 0 };
 			vertex.position = (Vector3f) {

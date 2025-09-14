@@ -188,6 +188,8 @@ void renderer_clean() {
 	shader_clean(&shell_shader);
 	shader_clean(&sky_shader);
 	shader_clean(&blit_shader);
+	shader_clean(&terrain_shader);
+	shader_clean(&debug_shader);
 
 	mesh_clean(&render_state.screen_quad);
 	texture_delete(&render_state.color_attachment);

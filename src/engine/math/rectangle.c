@@ -6,4 +6,6 @@ Rectangle rectangle_init(int x, int y, int width, int height) {
 	r.y = y;
 	r.width = width;
 	r.height = height;
+
+	return r;
 }

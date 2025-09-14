@@ -18,6 +18,12 @@ typedef enum {
 	RENDER_BLIT
 } RenderType;
 
+typedef enum {
+	OBJECT_PLAYER,
+	OBJECT_MAP,
+	OBJECT_OBJECTIVE
+} ObjectType;
+
 typedef struct gameObject GameObject;
 
 typedef void (*game_object_draw_func)(GameObject* g);
@@ -29,6 +35,7 @@ typedef struct gameObject {
 	Mesh mesh;
 	Texture texture;
 	RenderType type;
+	ObjectType obj_type;
 
 	// function pointers. If I end up wanting more, it might be worth
 	// making a vtable, pretty much just storing all the function pointers
@@ -41,7 +48,7 @@ typedef struct gameObject {
 	void* additional_data;
 } GameObject;
 
-void game_object_init(GameObject* g, RenderType type);
+void game_object_init(GameObject* g, RenderType r, ObjectType o);
 void game_object_draw(GameObject* g);
 // allows passing in the mode used to draw the mesh
 // e.g. GL_LINES, GL_POINTS, etc.

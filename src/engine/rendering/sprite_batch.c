@@ -108,7 +108,7 @@ void spritebatch_draw_string(Vector2f dst, Font* f, const char* s, f32 scale, Ve
 			.width = f->char_width * scale
 		};
 
-		spritebatch_draw(char_dst, char_src, f->fontset, color);
+		spritebatch_draw(char_dst, char_src, &f->fontset, color);
 	}
 }
 
