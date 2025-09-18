@@ -24,9 +24,9 @@ void objective_update(GameObject* g, f32 dt) {
 	//if (cube_is_vector3f_intersecting(collection_boundary, player_pos)) {
 	//	((ObjectiveInfo*)g->additional_data)->is_collected = 1;
 	//}
-	float dx = player_pos.x - g->transform.position[0];
-	float dy = player_pos.y - g->transform.position[1];
-	float dz = player_pos.z - g->transform.position[2];
+	float dx = player_pos.x - g->transform.position.x;
+	float dy = player_pos.y - g->transform.position.y;
+	float dz = player_pos.z - g->transform.position.z;
 	float dist_sq = dx * dx + dy * dy + dz * dz;
 	float radius = 2.5f * g->transform.scale; // tune to fit your mesh
 	if (dist_sq <= radius * radius) {

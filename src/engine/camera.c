@@ -126,14 +126,14 @@ void camera_get_chase_view(vec4* view) {
 	vec4 local = { camera.offset[0], camera.offset[1], camera.offset[2], 0.0 };
 	mat4x4_mul_vec4(world_offset, camera.target->rotation, local);
 
-	vec3_add(camera.position, camera.target->position, world_offset);
+	vec3_add(camera.position, camera.target->position.arr, world_offset);
 
 	vec4 forward = { 0, 0, -1, 0 };
 	vec4 world_forward;
 	mat4x4_mul_vec4(world_forward, camera.target->rotation, forward);
 
 	vec3 look_at;
-	vec3_add(look_at, camera.target->position, world_forward);
+	vec3_add(look_at, camera.target->position.arr, world_forward);
 
 	//mat4x4_look_at(view, c->position, look_at, (vec3) { 0, 1, 0 }); // if I want a static 'up'
 

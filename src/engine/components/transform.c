@@ -1,13 +1,14 @@
 #include "transform.h"
 
 void component_transform_init(Transform* t) {
-	memcpy(t->position, (vec3) { 0, 0, 0 }, sizeof(vec3));
+	//memcpy(t->position, (vec3) { 0, 0, 0 }, sizeof(vec3));
+	t->position = (Vector3f) { 0 };
 	mat4x4_identity(t->rotation);
 	t->scale = 1.0f;
 }
 
 void component_transform_calculate_model_matrix(vec4* model, Transform* t) {
-	mat4x4_translate(model, t->position[0], t->position[1], t->position[2]);
+	mat4x4_translate(model, t->position.x, t->position.y, t->position.z);
 
 	mat4x4_mul(model, model, t->rotation);
 

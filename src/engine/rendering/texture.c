@@ -6,13 +6,15 @@ void texture_init(Texture* t) {
 	t->height = 0;
 }
 
-void texture_load_texture(Texture* t, const char* texturePath) {
+void texture_load_texture(Texture* t, const char* texturePath, int flip) {
 	texture_bind(&t->id);
 
 	//TODO a flip flag would be nice
 	// some textures will be loaded with the wrong orientation
 	// and I should have a funtion arg to set stbi_flip_vertically
 	// instead of needing to configure the files manually
+
+	stbi_set_flip_vertically_on_load(flip);
 
 	// set sampler parameters, really should be configurable
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);

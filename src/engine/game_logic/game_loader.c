@@ -12,18 +12,18 @@ Texture* get_game_winner_sprite() { return &game_winner_texture; }
 
 void game_global_init() {
 	// I shouldn't have to worry about cleaning this as copying the
-	// struct to font means that font will not store the same tex ID,
+	// struct to font means that font will store the same tex ID,
 	// so cleaning there should handle cleaning here
 	Texture font_tex;
 	texture_init(&font_tex);
-	texture_load_texture(&font_tex, "./res/textures/font-testing.png");
+	texture_load_texture(&font_tex, "./res/textures/font.png", 0);
 	game_font = font_init("ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!?.,/-%()[]\":#", font_tex, 10, 10);
 	texture_init(&game_color_texture);
 	texture_load_from_color(&game_color_texture, (u8[4]) { 255, 255, 255, 255 });
 	texture_init(&game_overlay_texture);
-	texture_load_texture(&game_overlay_texture, "./res/textures/overlay.png");
+	texture_load_texture(&game_overlay_texture, "./res/textures/overlay.png", 0);
 	texture_init(&game_winner_texture);
-	texture_load_texture(&game_winner_texture, "./res/textures/smiley.png");
+	texture_load_texture(&game_winner_texture, "./res/textures/smiley.png", 0);
 }
 
 void game_assets_unload() {

@@ -112,7 +112,7 @@ void renderer_draw_game_object(GameObject* g) {
 
 	// cant declare in switch cases threshold and y_start are 
 	// only needed for shell type but thats okay :-)
-	f32 y_start = g->transform.position[1];
+	f32 y_start = g->transform.position.y;
 	f32 threshold = 0.0f;
 	mat4x4 model;
 	switch (g->type) {
@@ -141,9 +141,9 @@ void renderer_draw_game_object(GameObject* g) {
 				shader_set_float(render_state.bound_shader, "threshold", threshold);
 				game_object_draw(g);
 				threshold += 0.1f;
-				g->transform.position[1] += 0.025f;
+				g->transform.position.y += 0.025f;
 			}
-			g->transform.position[1] = y_start;
+			g->transform.position.y = y_start;
 			break;
 		case RENDER_TERRAIN:
 			component_transform_calculate_model_matrix(model, &g->transform);

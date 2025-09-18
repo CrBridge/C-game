@@ -282,6 +282,28 @@ static void draw_game(Array* game_objects) {
 
 static void draw_game_over(Array* game_objects) {
 	// text : game over ... press space to restart
+	Vector2f text_pos = {
+		.x = 32,
+		.y = 48
+	};
+
+	spritebatch_begin();
+	spritebatch_draw_string(
+		text_pos,
+		get_font(),
+		"YOU LOSE :(",
+		2.0f,
+		(Vector3f) { 0.8f, 0.1f, 0.24f }
+	);
+	text_pos.y += 32;
+	spritebatch_draw_string(
+		text_pos,
+		get_font(),
+		"PRESS SPACE TO RETRY",
+		1.0f,
+		(Vector3f) { 1, 1, 1 }
+	);
+	spritebatch_end();
 }
 
 static void draw_game_win(Array* game_objects) {
@@ -333,16 +355,16 @@ static void game_init_objects(Array* game_objects) {
 	GameObject terrain;
 	game_object_init(&terrain, RENDER_TERRAIN, OBJECT_MAP);
 	mesh_load_from_heightmap(&terrain.mesh, &noise, 256, 256);
-	texture_load_texture(&terrain.texture, "./res/textures/terrain_dither.png");
+	texture_load_texture(&terrain.texture, "./res/textures/terrain_dither.png", 0);
 	terrain.transform.scale = 1.0f;
 	array_append(game_objects, &terrain);
 
 	// player
 	GameObject ship;
 	game_object_init(&ship, RENDER_DEFAULT, OBJECT_PLAYER);
-	mesh_load_from_obj(&ship.mesh, "./res/models/test_ship.obj");
+	mesh_load_from_obj(&ship.mesh, "./res/models/ship.obj");
 	texture_load_from_color(&ship.texture, (u8[4]) { 80, 10, 25, 255 });
-	ship.transform.position[1] += 5.0f;
+	ship.transform.position.y += 5.0f;
 	ship.transform.scale = 0.3f;
 	player_info_init(&ship, &noise);
 	ship.input = player_input;
@@ -364,8 +386,8 @@ static void game_init_objects(Array* game_objects) {
 		);
 		f64 x_pos = rng_next_double(-128.0, 128.0);
 		f64 z_pos = rng_next_double(-128.0, 128.0);
-		ring.transform.position[0] = x_pos;
-		ring.transform.position[2] = z_pos;
+		ring.transform.position.x = x_pos;
+		ring.transform.position.z = z_pos;
 		ring.transform.scale = 2.0f;
 		objective_init(&ring);
 		ring.update = objective_update;

@@ -66,17 +66,17 @@ void player_update(GameObject* g, f32 dt) {
 	component_transform_get_local_forwards(forward, &g->transform);
 	vec3_norm(forward, forward);
 	vec3_scale(forward, forward, dt * 5.0f * info->thrust);
-	vec3_sub(g->transform.position, g->transform.position, forward);
+	vec3_sub(g->transform.position.arr, g->transform.position.arr, forward);
 
 	// temp!
-	player_pos.x = g->transform.position[0];
-	player_pos.y = g->transform.position[1];
-	player_pos.z = g->transform.position[2];
+	player_pos.x = g->transform.position.x;
+	player_pos.y = g->transform.position.y;
+	player_pos.z = g->transform.position.z;
 	player_thrust = info->thrust;
 
 	// 256 here comes from the width and height passed into the heighmap load function
-	float terrain_height_at_player = fnlGetNoise2D(info->noise, g->transform.position[0] + 256 / 2.0f, g->transform.position[2] + 256 / 2.0f);
-	if (g->transform.position[1] < terrain_height_at_player) {
+	float terrain_height_at_player = fnlGetNoise2D(info->noise, g->transform.position.x + 256 / 2.0f, g->transform.position.z + 256 / 2.0f);
+	if (g->transform.position.y < terrain_height_at_player) {
 		//printf("Player has collided with the terrain! :( \n\n");
 		player_has_crashed = 1;
 	}

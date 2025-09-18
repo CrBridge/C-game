@@ -3,6 +3,7 @@
 
 #include "../types.h"
 #include "../math_util.h"
+#include "../math/vector.h"
 
 #include <linmath.h>
 
@@ -10,7 +11,8 @@
 // xyz axes would mean we have to account for it in the normals
 
 typedef struct transform {
-	vec3 position;
+	//vec3 position;
+	Vector3f position;
 	mat4x4 rotation;
 	//quat rotation;
 	f32 scale;

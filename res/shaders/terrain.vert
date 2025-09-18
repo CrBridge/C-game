@@ -13,7 +13,6 @@ uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 
-//TODO! would like actual lighting at some point, hardcoding it here aint great
 const vec3 LIGHT_DIRECTION = normalize(vec3(-2.0, 1.0, 3.0));
 
 void main() {
