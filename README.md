@@ -16,5 +16,6 @@ and some of the textures were altered using [SLK_img2pixel](https://github.com/C
 Highly recommend both if you suck at art like I do
 
 Heres some screenshots anyway
+![gameplay gif](./screencaps/flight.gif)
 ![menu image](./screencaps/menu.png)
 ![game image](./screencaps/game.png)
